@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Hexagon, Mail, Lock, Phone, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
+import logo from '../assets/logo.png';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -114,7 +115,7 @@ const Login = () => {
                 <div className="relative z-20 text-white max-w-lg px-8">
                     <div className="mb-6 flex items-center gap-2">
                         <div className="p-2 bg-white rounded-2xl shadow-xl">
-                            <img src="/src/assets/logo.png" className="w-12 h-12 object-contain" alt="Logo" />
+                            <img src={logo} className="w-12 h-12 object-contain" alt="Logo" />
                         </div>
                         <h1 className="text-4xl font-extrabold mb-2 text-white">
                             Civic Connect

@@ -5,6 +5,7 @@ import {
     UserCog, ChevronRight, X, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/logo.png';
 
 const Sidebar = ({ darkMode, isOpen, setIsOpen }) => {
     const location = useLocation();
@@ -45,7 +46,7 @@ const Sidebar = ({ darkMode, isOpen, setIsOpen }) => {
                 <div className="relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                     <div className={`relative p-2 rounded-xl border transition-colors ${darkMode ? 'bg-[#0f172a] border-white/10' : 'bg-white border-gray-100'}`}>
-                        <img src="/src/assets/logo.png" className="w-7 h-7 object-contain brightness-110" alt="Logo" />
+                        <img src={logo} className="w-7 h-7 object-contain brightness-110" alt="Logo" />
                     </div>
                 </div>
                 <div>
