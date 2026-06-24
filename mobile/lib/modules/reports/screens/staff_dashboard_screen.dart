@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:http/http.dart' as http;
+import 'package:civic_connect_mobile/config/api_client.dart' as http;
 import '../../../config/api_config.dart';
 import './report_detail_screen.dart';
 

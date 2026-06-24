@@ -2,8 +2,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiConfig {
-  // baseUrl is read from .env file
-  static final String baseUrl = dotenv.get('API_BASE_URL', fallback: 'http://10.0.2.2:5000/api');
+  // Read primary and local fallback URLs
+  static final String primaryBaseUrl = dotenv.get('API_BASE_URL', fallback: 'http://10.0.2.2:5000/api');
+  static final String localBaseUrl = 'http://10.0.2.2:5000/api'; // standard Android emulator loopback to localhost:5000
+
+  // Track if we shifted to local
+  static bool useLocalFallback = false;
+
+  static String get baseUrl => useLocalFallback ? localBaseUrl : primaryBaseUrl;
   
   static String get reportsUrl => '$baseUrl/reports';
   static String get nearbyReportsUrl => '$baseUrl/reports/nearby';

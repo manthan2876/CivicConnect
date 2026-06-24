@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
+import 'package:civic_connect_mobile/config/api_client.dart' as http;
 import '../../../config/api_config.dart';
 
 class DashboardScreen extends StatefulWidget {
