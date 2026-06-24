@@ -8,6 +8,8 @@ export class AIFeedback extends Model {
     declare corrected_category: string;
     declare media_url: string | null;
     declare status: string;
+    declare createdAt: Date;
+    declare updatedAt: Date;
 }
 
 AIFeedback.init({

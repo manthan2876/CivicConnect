@@ -96,9 +96,12 @@ export class TriageService {
             // 3. Sort by workload (ascending) and return the best one
             staffWithWorkloads.sort((a, b) => a.workload - b.workload);
             
-            console.log(`[TriageService] Load Balancing: Selected Staff ${staffWithWorkloads[0].id} with workload ${staffWithWorkloads[0].workload}`);
+            const bestStaff = staffWithWorkloads[0];
+            if (!bestStaff) return null;
             
-            return staffWithWorkloads[0].id;
+            console.log(`[TriageService] Load Balancing: Selected Staff ${bestStaff.id} with workload ${bestStaff.workload}`);
+            
+            return bestStaff.id;
         } catch (error) {
             console.error('[TriageService] Staff Selection Error:', error);
             return null;

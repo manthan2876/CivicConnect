@@ -50,7 +50,7 @@ export const startSpatialDeduplicator = () => {
 
                 if (issues.length < 2) continue;
 
-                const primaryIssue = issues[0];
+                const primaryIssue = issues[0]!;
                 const duplicates = issues.slice(1);
 
                 console.log(`[CRON] Merging cluster ${group.cluster_id} (${group.category}). Primary: ${primaryIssue.id}, Merging: ${duplicates.length} issues.`);

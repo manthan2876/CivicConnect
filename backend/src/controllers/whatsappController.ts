@@ -4,8 +4,6 @@ import { Issue } from '../models/Issue.js';
 import { AIService } from '../services/aiService.js';
 import { TriageService } from '../services/triageService.js';
 import { PriorityService } from '../services/priorityService.js';
-import { StorageService } from '../services/storageService.js';
-import axios from 'axios';
 
 export const handleWhatsAppWebhook = async (req: Request, res: Response) => {
     try {
@@ -17,7 +15,6 @@ export const handleWhatsAppWebhook = async (req: Request, res: Response) => {
         if (!user) {
             user = await User.create({
                 phone,
-                name: `WhatsApp User (${phone.slice(-4)})`,
                 role: 'citizen'
             });
         }
@@ -79,7 +76,7 @@ export const handleWhatsAppWebhook = async (req: Request, res: Response) => {
         res.send(`
             <Response>
                 <Message>
-                    Hello ${user.name}! 
+                    Hello citizen (${user.phone})! 
                     Thank you for reporting this issue. 
                     We've identified it as "${issue.category}" with a priority score of ${priorityScore.toFixed(0)}.
                     Reference ID: ${issue.id.slice(0, 8)}

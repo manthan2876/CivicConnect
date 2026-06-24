@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
-import { QueryTypes, Op } from 'sequelize';
-import { User, Department, Ward, Issue, Repair, AIFeedback, sequelize } from '../config/db.js';
-import { sendNotificationToUser } from '../services/notificationService.js';
+import { Op } from 'sequelize';
+import { User, Issue, Repair, AIFeedback, sequelize } from '../config/db.js';
+import { sendNotificationToUser, broadcastNotification } from '../services/notificationService.js';
 import { AIService } from '../services/aiService.js';
 import { SpatialService } from '../services/spatialService.js';
 import { GeoIntelligenceService } from '../services/geoIntelligenceService.js';
@@ -10,18 +10,10 @@ import { AuditLog } from '../models/AuditLog.js';
 import { StorageService } from '../services/storageService.js';
 import { PriorityService } from '../services/priorityService.js';
 import { findWardId } from '../utils/spatialUtils.js';
-import { GamificationService, BADGES } from '../services/gamificationService.js';
+import { GamificationService } from '../services/gamificationService.js';
 import { TriageService } from '../services/triageService.js';
 import { RAGService } from '../services/ragService.js';
-
-
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 interface AuthRequest extends Request {
     userIdentifier?: string;
@@ -51,7 +43,7 @@ export const createReport = async (req: AuthRequest, res: Response) => {
     const audioFile = files?.['audio']?.[0];
 
     try {
-        const { category, description, latitude, longitude } = req.body;
+        const { description, latitude, longitude } = req.body;
         const userAuth = (req as any).user;
 
         if (!userAuth) return res.status(401).json({ error: 'User unauthorized' });
@@ -212,7 +204,7 @@ export const createReport = async (req: AuthRequest, res: Response) => {
             parseFloat(latitude),
             parseFloat(longitude),
             user.id
-        ).catch(err => console.error('[GeoIntelligence] Proactive Alert Failed:', err));
+        ).catch((err: any) => console.error('[GeoIntelligence] Proactive Alert Failed:', err));
         
         // 5.6 Notify Assigned Staff (NEW)
         if (assignedStaffId) {
@@ -221,7 +213,7 @@ export const createReport = async (req: AuthRequest, res: Response) => {
                 'New Task Assigned',
                 `You have been assigned a new ${issue.category} report in ${issue.ward_id || 'your ward'}.`,
                 { issue_id: issue.id, type: 'TASK_ASSIGNED' }
-            ).catch(err => console.error('[Triage] Staff Notification Failed:', err));
+            ).catch((err: any) => console.error('[Triage] Staff Notification Failed:', err));
         }
 
 
@@ -237,7 +229,7 @@ export const createReport = async (req: AuthRequest, res: Response) => {
 
 
         // 6. Trigger RAG Embedding (Background)
-        RAGService.updateIssueEmbedding(issue.id).catch(err => console.error('[RAG] Async update failed:', err));
+        RAGService.updateIssueEmbedding(issue.id).catch((err: any) => console.error('[RAG] Async update failed:', err));
 
         res.status(201).json({
             success: true,
@@ -618,7 +610,7 @@ export const proposeResolution = async (req: AuthRequest, res: Response): Promis
             'New Resolution to Approve',
             `Staff ${user.phone || ''} has submitted work for issue ${issue.id.slice(0, 8)}.`,
             { issue_id: issue.id, type: 'APPROVAL_REQUIRED' }
-        ).catch(err => console.error('[Notification] Authority notify failed:', err));
+        ).catch((err: any) => console.error('[Notification] Authority notify failed:', err));
 
         // 6. Notify the reporter
         if (issue.reporter_id) {
@@ -627,7 +619,7 @@ export const proposeResolution = async (req: AuthRequest, res: Response): Promis
                 'Work in Progress',
                 `Staff has completed the work for issue ${issue.id.slice(0, 8)}. It is now being verified by authorities.`,
                 { issue_id: issue.id, type: 'RESOLUTION_PROPOSED' }
-            ).catch(err => console.error('[Notification] Proposal notify failed:', err));
+            ).catch((err: any) => console.error('[Notification] Proposal notify failed:', err));
         }
 
         res.json({ success: true, message: 'Resolution proposed and awaiting authority approval', imageUrl });
@@ -672,7 +664,7 @@ export const confirmResolution = async (req: AuthRequest, res: Response): Promis
                 'Verify Resolution',
                 `Authority has approved the work for issue ${issue.id.slice(0, 8)}. Please confirm if you are satisfied.`,
                 { issue_id: issue.id, type: 'VERIFICATION_REQUIRED' }
-            ).catch(err => console.error('[Notification] Verification notify failed:', err));
+            ).catch((err: any) => console.error('[Notification] Verification notify failed:', err));
         }
 
         res.json({ success: true, message: 'Resolution approved by authority. Now awaiting citizen confirmation.' });
@@ -717,7 +709,7 @@ export const rejectResolution = async (req: AuthRequest, res: Response): Promise
                 'Resolution Rejected',
                 `Your resolution for issue ${issue.id.slice(0, 8)} was rejected. Reason: ${reason || 'Needs more work.'}`,
                 { issue_id: issue.id, type: 'TASK_REJECTED' }
-            ).catch(err => console.error('[Notification] Rejection notify failed:', err));
+            ).catch((err: any) => console.error('[Notification] Rejection notify failed:', err));
         }
 
         res.json({ success: true, message: 'Resolution rejected, issue returned to staff' });
@@ -787,7 +779,7 @@ export const citizenConfirmResolution = async (req: AuthRequest, res: Response):
                 'Great Job! 🌟',
                 `The reporter has verified your work for issue ${issue.id.slice(0, 8)}. Keep up the good work!`,
                 { issue_id: issue.id, type: 'WORK_VERIFIED' }
-            ).catch(err => console.error('[Notification] Staff verification notify failed:', err));
+            ).catch((err: any) => console.error('[Notification] Staff verification notify failed:', err));
         }
 
         res.json({ success: true, message: 'Thank you for verifying! Credits have been awarded.', creditsAwarded: totalAwarded });
@@ -827,7 +819,7 @@ export const citizenDisputeResolution = async (req: AuthRequest, res: Response):
                 'Resolution Disputed',
                 `The reporter was not satisfied with the work for issue ${issue.id.slice(0, 8)}. Reason: ${reason}`,
                 { issue_id: issue.id, type: 'WORK_DISPUTED' }
-            ).catch(err => console.error('[Notification] Staff dispute notify failed:', err));
+            ).catch((err: any) => console.error('[Notification] Staff dispute notify failed:', err));
         }
 
         broadcastNotification(
@@ -835,7 +827,7 @@ export const citizenDisputeResolution = async (req: AuthRequest, res: Response):
             'Citizen Dispute Raised',
             `Issue ${issue.id.slice(0, 8)} has been disputed by the reporter. Manual review required.`,
             { issue_id: issue.id, type: 'DISPUTE_RAISED' }
-        ).catch(err => console.error('[Notification] Authority dispute notify failed:', err));
+        ).catch((err: any) => console.error('[Notification] Authority dispute notify failed:', err));
 
         res.json({ success: true, message: 'Dispute recorded. A municipal authority will review this shortly.' });
 
@@ -931,7 +923,7 @@ export const getGeoJSONReports = async (req: AuthRequest, res: Response): Promis
     }
 };
 
-export const getAuthorityKPIs = async (req: AuthRequest, res: Response): Promise<any> => {
+export const getAuthorityKPIs = async (_req: AuthRequest, res: Response): Promise<any> => {
     try {
         const total = await Issue.count();
         const resolved = await Issue.count({ where: { status: 'Resolved' } });

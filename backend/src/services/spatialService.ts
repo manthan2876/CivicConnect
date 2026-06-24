@@ -1,6 +1,6 @@
 import { sequelize, Issue } from '../config/db.js';
 
-import { QueryTypes, Op } from 'sequelize';
+import { QueryTypes } from 'sequelize';
 
 export class SpatialService {
     /**

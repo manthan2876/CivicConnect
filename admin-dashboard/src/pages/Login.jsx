@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Hexagon, Mail, Lock, Phone, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../utils/api';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -66,7 +67,15 @@ const Login = () => {
             }
 
             console.log('[Dashboard Login] Success:', user.email || user.phone);
-            const userRole = (user.user_metadata?.role || user.role || 'citizen').toLowerCase();
+            
+            let userRole = 'citizen';
+            try {
+                const profile = await api.get('/users/me');
+                userRole = (profile.role || user.user_metadata?.role || user.role || 'citizen').toLowerCase();
+            } catch (profileErr) {
+                console.warn('[Dashboard Login] Could not fetch profile, falling back to metadata:', profileErr);
+                userRole = (user.user_metadata?.role || user.role || 'citizen').toLowerCase();
+            }
 
             if (userRole === 'super_admin') {
                 navigate('/superadmin/dashboard');

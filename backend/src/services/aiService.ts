@@ -1,8 +1,22 @@
 import axios from 'axios';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { Client, handle_file } from '@gradio/client';
 
 dotenv.config();
+
+let hfClient: any = null;
+
+async function getGradioClient() {
+    if (!hfClient) {
+        const spaceId = process.env.HF_SPACE_ID || 'manthan2876/CivicConnect-Classifier';
+        const hfToken = process.env.HF_TOKEN;
+        console.log(`[AI SERVICE] Connecting to Hugging Face Space: ${spaceId}...`);
+        hfClient = await Client.connect(spaceId, hfToken ? { token: hfToken } as any : {});
+        console.log('[AI SERVICE] Connected to Hugging Face Space successfully.');
+    }
+    return hfClient;
+}
 
 const MODALITY_WEIGHTS = {
     IMAGE: 0.50,
@@ -123,7 +137,7 @@ export class AIService {
         try {
             // Convert Buffer to a File object for the OpenAI client
             // Node.js 18+ has Blob/File, but for older we can use a Stream or just a custom object
-            const file = new File([audioBuffer], fileName, { type: 'audio/mpeg' });
+            const file = new File([new Uint8Array(audioBuffer)], fileName, { type: 'audio/mpeg' });
 
             const transcription = await openai.audio.transcriptions.create({
                 file: file,
@@ -138,9 +152,37 @@ export class AIService {
     }
 
     /**
-     * Call the Python AI Microservice to classify the image (returns Top-3).
+     * Call the Python AI Microservice or Hugging Face Space to classify the image (returns Top-3).
      */
     static async classifyImage(imageBuffer: Buffer, fileName: string): Promise<any[]> {
+        const useHF = process.env.USE_HF_CLASSIFIER !== 'false';
+        if (useHF) {
+            try {
+                const client = await getGradioClient();
+                const blob = new Blob([new Uint8Array(imageBuffer)], { type: 'image/jpeg' });
+                const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+                console.log(`[AI SERVICE] Classifying image via Hugging Face Space...`);
+                const result = await client.predict('/classify', {
+                    image: handle_file(file)
+                });
+                
+                if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
+                    const labelData = result.data[0];
+                    if (labelData && Array.isArray(labelData.confidences)) {
+                        return labelData.confidences.map((item: any) => ({
+                            class: item.label,
+                            confidence: item.confidence
+                        }));
+                    }
+                }
+                console.warn('[AI SERVICE] HF Space result in unexpected format. Falling back to local microservice.');
+            } catch (error) {
+                console.error('[AI SERVICE] HF Space classification failed. Falling back to local microservice. Error:', error);
+            }
+        }
+
+        // Fallback: local Python AI Microservice
         const FormData = (await import('form-data')).default;
         const formData = new FormData();
         formData.append('file', imageBuffer, { filename: fileName });
@@ -156,6 +198,37 @@ export class AIService {
             console.error('AI Classification failed:', error);
             return [];
         }
+    }
+
+    /**
+     * Performs a multimodal analysis using an image URL, audio buffer, and description text.
+     */
+    static async analyzeMultimodal(imageUrl: string | null, audioBuffer: Buffer | null, text: string): Promise<any> {
+        let imageTop3: any[] = [];
+        if (imageUrl) {
+            try {
+                console.log(`[AI SERVICE] Fetching remote image for classification: ${imageUrl}`);
+                const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+                const buffer = Buffer.from(response.data);
+                imageTop3 = await this.classifyImage(buffer, 'whatsapp_image.jpg');
+            } catch (err) {
+                console.error('[AI SERVICE] WhatsApp image fetch or classification failed:', err);
+            }
+        }
+
+        let audioText = '';
+        if (audioBuffer) {
+            try {
+                audioText = await this.transcribeAudio(audioBuffer, 'whatsapp_audio.mp3');
+            } catch (err) {
+                console.error('[AI SERVICE] WhatsApp audio transcription failed:', err);
+            }
+        }
+
+        const textTop3 = await this.standardizeContent(text, audioText);
+        const fusionResult = this.calculateAdvancedFusion(imageTop3, [], textTop3);
+
+        return fusionResult;
     }
 
     /**

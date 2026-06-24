@@ -1,4 +1,4 @@
-import { sequelize, Issue, User } from '../config/db.js';
+import { sequelize, User } from '../config/db.js';
 import { QueryTypes } from 'sequelize';
 
 export class PriorityService {
@@ -14,7 +14,7 @@ export class PriorityService {
      */
     static async calculatePriority(
         userId: string,
-        wardId: string,
+        _wardId: string,
         longitude: number,
         latitude: number,
         textualUrgency: number,

@@ -50,7 +50,7 @@ export class StorageService {
             let objectKey = urlOrKey;
             if (urlOrKey.includes(this.bucketName)) {
                 const parts = urlOrKey.split(`${this.bucketName}/`);
-                if (parts.length > 1) {
+                if (parts.length > 1 && parts[1]) {
                     objectKey = parts[1];
                 }
             }

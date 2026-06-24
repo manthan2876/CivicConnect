@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { sequelize, Issue } from '../config/db.js';
+import { sequelize } from '../config/db.js';
 import { QueryTypes } from 'sequelize';
 import dotenv from 'dotenv';
 
@@ -27,7 +27,7 @@ export class RAGService {
                 messages: [{ role: 'user', content: prompt }],
                 max_tokens: 20
             });
-            return response.choices[0].message.content?.trim() || query;
+            return response.choices?.[0]?.message?.content?.trim() || query;
         } catch (error) {
             return query;
         }
@@ -110,7 +110,7 @@ export class RAGService {
     /**
      * No-op for Groq-only mode (No embeddings needed for FTS).
      */
-    static async updateIssueEmbedding(issueId: string) {
+    static async updateIssueEmbedding(_issueId: string) {
         // Full Text Search handles this automatically in the DB
         return;
     }
