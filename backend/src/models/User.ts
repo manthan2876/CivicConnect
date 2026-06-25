@@ -13,6 +13,8 @@ export class User extends Model {
     declare home_location: any;
     declare alert_radius_meters: number;
     declare achievements: any;
+    // Association populated by Sequelize `include` (RBAC roles with permissions)
+    declare roles?: any[];
 }
 
 
