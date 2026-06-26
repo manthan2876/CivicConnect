@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { reportsApi } from '../services/reportsApi';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -46,6 +46,16 @@ const getIcon = (issue, colorMode, darkMode) => {
     });
 };
 
+const ChangeView = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center) {
+            map.setView(center, map.getZoom());
+        }
+    }, [center, map]);
+    return null;
+};
+
 const AdminMapView = () => {
     const { darkMode } = useOutletContext();
     const navigate = useNavigate();
@@ -60,12 +70,28 @@ const AdminMapView = () => {
     const jurisdictions = ['All', ...new Set(issues.filter(f => f.properties?.metadata?.jurisdiction).map(f => f.properties.metadata.jurisdiction))];
 
     useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setCenter([position.coords.latitude, position.coords.longitude]);
+                },
+                (error) => {
+                    console.warn("Geolocation lookup failed:", error);
+                }
+            );
+        }
+
         reportsApi.getGeoJSON()
             .then(data => {
                 if (data && data.type === 'FeatureCollection') {
                     setIssues(data.features);
                     if (data.features.length > 0 && data.features[0].geometry) {
-                        setCenter([data.features[0].geometry.coordinates[1], data.features[0].geometry.coordinates[0]]);
+                        setCenter(prevCenter => {
+                            if (prevCenter[0] === 22.5540 && prevCenter[1] === 72.9299) {
+                                return [data.features[0].geometry.coordinates[1], data.features[0].geometry.coordinates[0]];
+                            }
+                            return prevCenter;
+                        });
                     }
                 } else {
                     setIssues([]);
@@ -119,6 +145,7 @@ const AdminMapView = () => {
 
             <div className={`flex-1 overflow-hidden border ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
                 <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
+                    <ChangeView center={center} />
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {issues.map((feature) => {
                         if (!feature.geometry || !feature.properties) return null;

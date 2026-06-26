@@ -13,12 +13,22 @@ export const useAdminJurisdictions = () => {
     const [selectedDept, setSelectedDept] = useState('');
     const [selectedUlb, setSelectedUlb] = useState('');
     const [drawnPoints, setDrawnPoints] = useState([]); // [[lat, lng], ...]
-    const [mapCenter] = useState([22.5540, 72.9299]); // Anand default center
+    const [mapCenter, setMapCenter] = useState([22.5540, 72.9299]); // Anand default center
 
     const [showHelp, setShowHelp] = useState(true);
 
     useEffect(() => {
         fetchData();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setMapCenter([position.coords.latitude, position.coords.longitude]);
+                },
+                (error) => {
+                    console.warn("Geolocation lookup failed, using default center:", error);
+                }
+            );
+        }
     }, []);
 
     const fetchData = async () => {

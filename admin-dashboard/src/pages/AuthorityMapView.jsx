@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useOutletContext, useNavigate } from 'react-router-dom';
@@ -10,6 +10,16 @@ import { reportsApi } from '../services/reportsApi';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
+const ChangeView = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center) {
+            map.setView(center, map.getZoom());
+        }
+    }, [center, map]);
+    return null;
+};
+
 const AuthorityMapView = () => {
     const { darkMode } = useOutletContext();
     const navigate = useNavigate();
@@ -18,12 +28,28 @@ const AuthorityMapView = () => {
     const [center, setCenter] = useState([22.5540, 72.9299]);
 
     useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setCenter([position.coords.latitude, position.coords.longitude]);
+                },
+                (error) => {
+                    console.warn("Geolocation lookup failed:", error);
+                }
+            );
+        }
+
         reportsApi.getAll()
             .then(data => {
                 const issuesArray = Array.isArray(data) ? data : [];
                 setIssues(issuesArray);
                 if (issuesArray.length > 0 && issuesArray[0].location) {
-                    setCenter([issuesArray[0].location.coordinates[1], issuesArray[0].location.coordinates[0]]);
+                    setCenter(prevCenter => {
+                        if (prevCenter[0] === 22.5540 && prevCenter[1] === 72.9299) {
+                            return [issuesArray[0].location.coordinates[1], issuesArray[0].location.coordinates[0]];
+                        }
+                        return prevCenter;
+                    });
                 }
                 setLoading(false);
             })
@@ -47,6 +73,7 @@ const AuthorityMapView = () => {
 
             <div className="flex-1 bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
                 <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
+                    <ChangeView center={center} />
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {issues.map((issue) => {
                         if (!issue.location) return null;

@@ -1,7 +1,17 @@
 import React from 'react';
-import { MapContainer, TileLayer, Polygon, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { HelpCircle } from 'lucide-react';
 import L from 'leaflet';
+
+const ChangeView = ({ center }) => {
+    const map = useMap();
+    React.useEffect(() => {
+        if (center) {
+            map.setView(center, map.getZoom());
+        }
+    }, [center, map]);
+    return null;
+};
 
 const MapClickHandler = ({ onMapClick }) => {
     useMapEvents({
@@ -42,6 +52,7 @@ const JurisdictionMap = ({
             )}
 
             <MapContainer center={mapCenter} zoom={13} className="h-full w-full z-10">
+                <ChangeView center={mapCenter} />
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
