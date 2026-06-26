@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getWards, createWard } from '../controllers/wardController.js';
+import { getZones, createZone } from '../controllers/zoneController.js';
 import { getUlbs, createUlb } from '../controllers/ulbController.js';
 import { wipeData } from '../controllers/systemController.js';
 import { verifySupabaseToken } from '../middleware/authMiddleware.js';
@@ -13,6 +14,10 @@ router.use(verifySupabaseToken);
 // Wards management
 router.get('/wards', getWards);
 router.post('/wards', requirePermission('users:manage'), createWard);
+
+// Zones management
+router.get('/zones', getZones);
+router.post('/zones', requirePermission('users:manage'), createZone);
 
 // ULB Boundaries management
 router.get('/ulb-boundaries', getUlbs);

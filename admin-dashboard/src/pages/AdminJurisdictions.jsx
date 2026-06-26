@@ -11,12 +11,17 @@ const AdminJurisdictions = () => {
         activeTab,
         setActiveTab,
         wards,
+        zones,
         ulbs,
         departments,
         name,
         setName,
+        code,
+        setCode,
         selectedDept,
         setSelectedDept,
+        selectedZone,
+        setSelectedZone,
         selectedUlb,
         setSelectedUlb,
         drawnPoints,
@@ -34,7 +39,7 @@ const AdminJurisdictions = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className={`text-4xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>Jurisdictions & Boundaries</h1>
-                    <p className={`mt-2 text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Configure regional cities (ULBs) and localized wards with interactive boundary drawing.</p>
+                    <p className={`mt-2 text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Configure regional cities (ULBs), zones, and localized wards with interactive boundary drawing.</p>
                 </div>
             </div>
 
@@ -44,7 +49,13 @@ const AdminJurisdictions = () => {
                     onClick={() => { setActiveTab('wards'); handleClear(); }}
                     className={`pb-4 px-6 font-bold text-sm border-b-2 transition-all ${activeTab === 'wards' ? 'border-violet-600 text-violet-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
-                    Wards (Administrative Zones)
+                    Wards (Sub-Zones)
+                </button>
+                <button
+                    onClick={() => { setActiveTab('zones'); handleClear(); }}
+                    className={`pb-4 px-6 font-bold text-sm border-b-2 transition-all ${activeTab === 'zones' ? 'border-violet-600 text-violet-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Zones (SMC Administrative Zones)
                 </button>
                 <button
                     onClick={() => { setActiveTab('ulbs'); handleClear(); }}
@@ -60,8 +71,12 @@ const AdminJurisdictions = () => {
                     activeTab={activeTab}
                     name={name}
                     setName={setName}
+                    code={code}
+                    setCode={setCode}
                     selectedDept={selectedDept}
                     setSelectedDept={setSelectedDept}
+                    selectedZone={selectedZone}
+                    setSelectedZone={setSelectedZone}
                     selectedUlb={selectedUlb}
                     setSelectedUlb={setSelectedUlb}
                     drawnPoints={drawnPoints}
@@ -69,6 +84,7 @@ const AdminJurisdictions = () => {
                     onClear={handleClear}
                     onSubmit={handleCreateJurisdiction}
                     departments={departments}
+                    zones={zones}
                     ulbs={ulbs}
                     wards={wards}
                     darkMode={darkMode}
@@ -82,6 +98,8 @@ const AdminJurisdictions = () => {
                     showHelp={showHelp}
                     onCloseHelp={() => setShowHelp(false)}
                     activeTab={activeTab}
+                    selectedZone={selectedZone}
+                    zones={zones}
                 />
             </div>
         </div>

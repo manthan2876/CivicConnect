@@ -19,6 +19,7 @@ import { RolePermission } from '../models/RolePermission.js';
 import { UserRole } from '../models/UserRole.js';
 import { ProcessingJob } from '../models/ProcessingJob.js';
 import { UlbBoundary } from '../models/UlbBoundary.js';
+import { Zone } from '../models/Zone.js';
 
 // Initialize associations
 import './associations.js';
@@ -39,5 +40,6 @@ export {
     RolePermission,
     UserRole,
     ProcessingJob,
-    UlbBoundary
+    UlbBoundary,
+    Zone
 };

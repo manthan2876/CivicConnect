@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
-import { Ward, Department, UlbBoundary } from '../config/db.js';
+import { Ward, Department, UlbBoundary, Zone, sequelize } from '../config/db.js';
+import { QueryTypes } from 'sequelize';
 
 export interface AuthRequest extends Request {
     user?: any;
@@ -18,7 +19,8 @@ export const getWards = async (req: AuthRequest, res: Response) => {
             where,
             include: [
                 { model: Department, as: 'department', attributes: ['id', 'name'] },
-                { model: UlbBoundary, as: 'ulb', attributes: ['id', 'name'] }
+                { model: UlbBoundary, as: 'ulb', attributes: ['id', 'name'] },
+                { model: Zone, as: 'zone', attributes: ['id', 'name', 'code'] }
             ],
             order: [['name', 'ASC']]
         });
@@ -33,6 +35,7 @@ export const createWard = async (req: AuthRequest, res: Response) => {
         const user = req.user;
         const { name, dept_id, boundaryCoordinates } = req.body;
         let ulb_id = req.body.ulb_id;
+        let zone_id = req.body.zone_id || null;
 
         if (user && user.role !== 'super_admin') {
             ulb_id = user.ulb_id;
@@ -50,10 +53,44 @@ export const createWard = async (req: AuthRequest, res: Response) => {
             formattedCoordinates.push([first[0], first[1]]);
         }
 
+        // Perform ST_Within spatial containment check if zone_id is provided
+        if (zone_id) {
+            const zone = await Zone.findByPk(zone_id);
+            if (!zone) {
+                return res.status(404).json({ error: 'Selected Zone not found.' });
+            }
+            if (zone.boundary) {
+                const wardGeom = {
+                    type: 'Polygon',
+                    coordinates: [formattedCoordinates]
+                };
+
+                const queryStr = `
+                    SELECT ST_Within(
+                        ST_GeomFromGeoJSON(:wardGeom),
+                        ST_GeomFromGeoJSON(:zoneGeom)
+                    ) AS is_within
+                `;
+
+                const [spatialCheck]: any = await sequelize.query(queryStr, {
+                    replacements: {
+                        wardGeom: JSON.stringify(wardGeom),
+                        zoneGeom: JSON.stringify(zone.boundary)
+                    },
+                    type: QueryTypes.SELECT
+                });
+
+                if (!spatialCheck || !spatialCheck.is_within) {
+                    return res.status(400).json({ error: "Ward boundary must be completely within the selected zone's boundary." });
+                }
+            }
+        }
+
         const ward = await Ward.create({
             name,
             dept_id,
             ulb_id: ulb_id || null,
+            zone_id,
             boundary: {
                 type: 'Polygon',
                 coordinates: [formattedCoordinates]

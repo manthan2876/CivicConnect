@@ -13,6 +13,8 @@ import { RolePermission } from '../models/RolePermission.js';
 import { UserRole } from '../models/UserRole.js';
 import { ProcessingJob } from '../models/ProcessingJob.js';
 import { UlbBoundary } from '../models/UlbBoundary.js';
+import { Zone } from '../models/Zone.js';
+
 
 // ── Processing Jobs ──────────────────────────────────────────────
 ProcessingJob.belongsTo(Issue, { foreignKey: 'issue_id', as: 'issue' });
@@ -56,3 +58,13 @@ Ward.belongsTo(UlbBoundary, { foreignKey: 'ulb_id', as: 'ulb' });
 UlbBoundary.hasMany(Ward, { foreignKey: 'ulb_id', as: 'wards' });
 Department.belongsTo(UlbBoundary, { foreignKey: 'ulb_id', as: 'ulb' });
 UlbBoundary.hasMany(Department, { foreignKey: 'ulb_id', as: 'departments' });
+
+// ── Zones ────────────────────────────────────────────────────────
+Zone.belongsTo(UlbBoundary, { foreignKey: 'ulb_id', as: 'ulb' });
+UlbBoundary.hasMany(Zone, { foreignKey: 'ulb_id', as: 'zones' });
+Ward.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone' });
+Zone.hasMany(Ward, { foreignKey: 'zone_id', as: 'wards' });
+Department.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone' });
+Zone.hasMany(Department, { foreignKey: 'zone_id', as: 'departments' });
+Department.belongsTo(Ward, { foreignKey: 'ward_id', as: 'ward' });
+Ward.hasMany(Department, { foreignKey: 'ward_id', as: 'departments' });

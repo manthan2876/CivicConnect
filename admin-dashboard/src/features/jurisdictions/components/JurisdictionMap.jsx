@@ -13,6 +13,23 @@ const ChangeView = ({ center }) => {
     return null;
 };
 
+const ZoneCentering = ({ zonePositions }) => {
+    const map = useMap();
+    React.useEffect(() => {
+        if (zonePositions && zonePositions.length > 0) {
+            // Find center
+            let totalLat = 0;
+            let totalLng = 0;
+            zonePositions.forEach(p => {
+                totalLat += p[0];
+                totalLng += p[1];
+            });
+            map.setView([totalLat / zonePositions.length, totalLng / zonePositions.length], map.getZoom());
+        }
+    }, [zonePositions, map]);
+    return null;
+};
+
 const MapClickHandler = ({ onMapClick }) => {
     useMapEvents({
         click(e) {
@@ -28,8 +45,20 @@ const JurisdictionMap = ({
     onMapClick,
     showHelp,
     onCloseHelp,
-    activeTab
+    activeTab,
+    selectedZone,
+    zones = []
 }) => {
+    // Extract selected zone positions to render dashed border
+    const activeZone = zones.find(z => z.id === selectedZone);
+    const getZonePositions = () => {
+        if (!activeZone || !activeZone.boundary || !activeZone.boundary.coordinates) return null;
+        const coords = activeZone.boundary.coordinates[0];
+        return coords.map(c => [c[1], c[0]]); // Swapping [lng, lat] to [lat, lng] for Leaflet
+    };
+
+    const zonePositions = getZonePositions();
+
     return (
         <div className="lg:col-span-2 relative h-[600px] rounded-3xl overflow-hidden shadow-xl border border-gray-200 dark:border-white/5">
             {showHelp && (
@@ -38,7 +67,11 @@ const JurisdictionMap = ({
                     <div>
                         <h4 className="font-bold text-sm text-violet-100">Interactive Map Boundaries Drawing</h4>
                         <p className="text-[11px] text-violet-200/90 mt-1">
-                            Click anywhere on the map to define the boundary vertices of your {activeTab === 'wards' ? 'Ward' : 'City (ULB)'}.
+                            Click anywhere on the map to define the boundary vertices of your {
+                                activeTab === 'wards' ? 'Ward' : 
+                                activeTab === 'zones' ? 'Zone' : 
+                                'City (ULB)'
+                            }.
                             The polygon will draw automatically as you place markers. Connect at least 3 points, then click **Save Jurisdiction** to submit.
                         </p>
                     </div>
@@ -53,6 +86,7 @@ const JurisdictionMap = ({
 
             <MapContainer center={mapCenter} zoom={13} className="h-full w-full z-10">
                 <ChangeView center={mapCenter} />
+                <ZoneCentering zonePositions={zonePositions} />
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -60,6 +94,21 @@ const JurisdictionMap = ({
 
                 <MapClickHandler onMapClick={onMapClick} />
 
+                {/* Render Selected Parent Zone Boundary */}
+                {zonePositions && (
+                    <Polygon
+                        positions={zonePositions}
+                        pathOptions={{
+                            color: '#F43F5E',
+                            fillColor: '#F43F5E',
+                            fillOpacity: 0.04,
+                            weight: 2,
+                            dashArray: '6, 6'
+                        }}
+                    />
+                )}
+
+                {/* Render Currently Drawing Boundary */}
                 {drawnPoints.length >= 2 && (
                     <Polygon
                         positions={drawnPoints}

@@ -5,8 +5,12 @@ const JurisdictionForm = ({
     activeTab,
     name,
     setName,
+    code,
+    setCode,
     selectedDept,
     setSelectedDept,
+    selectedZone,
+    setSelectedZone,
     selectedUlb,
     setSelectedUlb,
     drawnPoints,
@@ -14,6 +18,7 @@ const JurisdictionForm = ({
     onClear,
     onSubmit,
     departments,
+    zones = [],
     ulbs,
     wards,
     darkMode
@@ -23,7 +28,7 @@ const JurisdictionForm = ({
             <div>
                 <h2 className={`text-2xl font-black mb-6 flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     <Layers className="text-violet-500" />
-                    Create {activeTab === 'wards' ? 'New Ward' : 'New ULB'}
+                    Create {activeTab === 'wards' ? 'New Ward' : activeTab === 'zones' ? 'New Zone' : 'New ULB'}
                 </h2>
 
                 <form onSubmit={onSubmit} className="space-y-6">
@@ -31,13 +36,31 @@ const JurisdictionForm = ({
                         <label className="block text-xs font-black uppercase text-gray-500 mb-2">Boundary Name</label>
                         <input
                             type="text"
-                            placeholder={activeTab === 'wards' ? 'e.g. Ward 05 - Anand Central' : 'e.g. Anand Municipal Corporation'}
+                            placeholder={
+                                activeTab === 'wards' ? 'e.g. Adajan' : 
+                                activeTab === 'zones' ? 'e.g. West Zone' : 
+                                'e.g. Surat Municipal Corporation'
+                            }
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
                             required
                         />
                     </div>
+
+                    {activeTab === 'zones' && (
+                        <div>
+                            <label className="block text-xs font-black uppercase text-gray-500 mb-2">Zone Code</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. WZ"
+                                value={code}
+                                onChange={(e) => setCode(e.target.value)}
+                                className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                                required
+                            />
+                        </div>
+                    )}
 
                     {activeTab === 'wards' && (
                         <>
@@ -57,19 +80,36 @@ const JurisdictionForm = ({
                             </div>
 
                             <div>
-                                <label className="block text-xs font-black uppercase text-gray-500 mb-2">Associated City (ULB)</label>
+                                <label className="block text-xs font-black uppercase text-gray-500 mb-2">Associated Zone (Required for containment check)</label>
                                 <select
-                                    value={selectedUlb}
-                                    onChange={(e) => setSelectedUlb(e.target.value)}
+                                    value={selectedZone}
+                                    onChange={(e) => setSelectedZone(e.target.value)}
                                     className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                                    required
                                 >
-                                    <option value="">-- None --</option>
-                                    {ulbs.map(u => (
-                                        <option key={u.id} value={u.id}>{u.name}</option>
+                                    <option value="">-- Select Zone --</option>
+                                    {zones.map(z => (
+                                        <option key={z.id} value={z.id}>{z.name} ({z.code})</option>
                                     ))}
                                 </select>
                             </div>
                         </>
+                    )}
+
+                    {(activeTab === 'wards' || activeTab === 'zones') && (
+                        <div>
+                            <label className="block text-xs font-black uppercase text-gray-500 mb-2">Associated City (ULB)</label>
+                            <select
+                                value={selectedUlb}
+                                onChange={(e) => setSelectedUlb(e.target.value)}
+                                className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                            >
+                                <option value="">-- None --</option>
+                                {ulbs.map(u => (
+                                    <option key={u.id} value={u.id}>{u.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     )}
 
                     <div>
@@ -121,7 +161,7 @@ const JurisdictionForm = ({
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-white/10">
-                <h3 className="text-xs font-black uppercase text-gray-500 mb-3">Existing {activeTab === 'wards' ? 'Wards' : 'ULBs'}</h3>
+                <h3 className="text-xs font-black uppercase text-gray-500 mb-3">Existing {activeTab === 'wards' ? 'Wards' : activeTab === 'zones' ? 'Zones' : 'ULBs'}</h3>
                 <div className="max-h-48 overflow-y-auto space-y-2">
                     {activeTab === 'wards' ? (
                         wards.length > 0 ? (
@@ -133,6 +173,17 @@ const JurisdictionForm = ({
                             ))
                         ) : (
                             <p className="text-xs text-gray-500 italic">No wards registered.</p>
+                        )
+                    ) : activeTab === 'zones' ? (
+                        zones.length > 0 ? (
+                            zones.map(z => (
+                                <div key={z.id} className={`p-3 rounded-xl flex justify-between items-center text-xs ${darkMode ? 'bg-gray-900/40 hover:bg-gray-900/60' : 'bg-gray-50 hover:bg-gray-100'}`}>
+                                    <span className="font-bold">{z.name} ({z.code})</span>
+                                    <span className="text-gray-500">ID: {z.id.slice(0, 8)}</span>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-xs text-gray-500 italic">No zones registered.</p>
                         )
                     ) : (
                         ulbs.length > 0 ? (

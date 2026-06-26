@@ -18,6 +18,12 @@ const AdminIssueList = () => {
         setFilterCategory,
         searchTerm,
         setSearchTerm,
+        filterZone,
+        setFilterZone,
+        filterWard,
+        setFilterWard,
+        zones,
+        wards,
         loading,
         selectedIds,
         setSelectedIds,
@@ -114,6 +120,12 @@ const AdminIssueList = () => {
                     setFilterCategory={setFilterCategory}
                     filterStatus={filterStatus}
                     setFilterStatus={setFilterStatus}
+                    filterZone={filterZone}
+                    setFilterZone={setFilterZone}
+                    filterWard={filterWard}
+                    setFilterWard={setFilterWard}
+                    zones={zones}
+                    wards={wards}
                     categories={categories}
                     onExport={handleExport}
                     darkMode={darkMode}
