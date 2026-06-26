@@ -60,11 +60,15 @@ Department.belongsTo(UlbBoundary, { foreignKey: 'ulb_id', as: 'ulb' });
 UlbBoundary.hasMany(Department, { foreignKey: 'ulb_id', as: 'departments' });
 
 // ── Zones ────────────────────────────────────────────────────────
+// constraints: false prevents Sequelize from emitting FK DDL during
+// sync({ alter: true }) before the zones table exists (ordering issue).
+// ORM-level associations (include/populate) still work correctly.
 Zone.belongsTo(UlbBoundary, { foreignKey: 'ulb_id', as: 'ulb' });
 UlbBoundary.hasMany(Zone, { foreignKey: 'ulb_id', as: 'zones' });
-Ward.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone' });
-Zone.hasMany(Ward, { foreignKey: 'zone_id', as: 'wards' });
-Department.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone' });
-Zone.hasMany(Department, { foreignKey: 'zone_id', as: 'departments' });
-Department.belongsTo(Ward, { foreignKey: 'ward_id', as: 'ward' });
-Ward.hasMany(Department, { foreignKey: 'ward_id', as: 'departments' });
+Ward.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone', constraints: false });
+Zone.hasMany(Ward, { foreignKey: 'zone_id', as: 'wards', constraints: false });
+Department.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone', constraints: false });
+Zone.hasMany(Department, { foreignKey: 'zone_id', as: 'departments', constraints: false });
+Department.belongsTo(Ward, { foreignKey: 'ward_id', as: 'ward', constraints: false });
+Ward.hasMany(Department, { foreignKey: 'ward_id', as: 'departments', constraints: false });
+
