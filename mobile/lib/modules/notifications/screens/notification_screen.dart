@@ -55,6 +55,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
