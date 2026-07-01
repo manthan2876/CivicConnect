@@ -36,9 +36,9 @@ const SettingsSection = ({
                     <div className="flex flex-col items-center gap-4 border-b border-gray-200 dark:border-white/10 pb-6 mb-6">
                         <div className="relative group">
                             <div className={`h-24 w-24 flex items-center justify-center text-xl font-bold rounded-3xl border-2 transition-all overflow-hidden ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}>
-                                {user?.user_metadata?.avatar_url ? (
+                                {user?.avatar_url || user?.user_metadata?.avatar_url ? (
                                     <img
-                                        src={user.user_metadata.avatar_url}
+                                        src={user.avatar_url || user.user_metadata.avatar_url}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
                                     />

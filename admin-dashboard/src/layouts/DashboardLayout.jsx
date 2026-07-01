@@ -358,9 +358,9 @@ const DashboardLayout = () => {
                             </div>
                             <div className={`h-9 w-9 flex items-center justify-center text-xs font-bold rounded-xl border transition-all overflow-hidden cursor-pointer ${darkMode ? 'bg-gray-900 text-white border-gray-700 hover:border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300 hover:border-gray-400'
                                 }`}>
-                                {user?.user_metadata?.avatar_url ? (
+                                {user?.avatar_url || user?.user_metadata?.avatar_url ? (
                                     <img
-                                        src={user.user_metadata.avatar_url}
+                                        src={user.avatar_url || user.user_metadata.avatar_url}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
                                     />
