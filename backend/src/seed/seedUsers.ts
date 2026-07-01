@@ -1,4 +1,4 @@
-import { User, Department, Ward, Role, UserRole } from '../config/db.js';
+import { User, Department, Ward, Role, UserRole, Issue } from '../config/db.js';
 import dotenv from 'dotenv';
 import { supabaseAdmin } from '../config/supabase.js';
 
@@ -249,6 +249,72 @@ export const seedUsers = async () => {
 
                 console.log(`User ${userData.email} synced to PostgreSQL.`);
             }
+        }
+
+        // 3. Seed Mock Issue Reports
+        console.log('Seeding mock issue reports for live telemetry...');
+        const citizenUser = await User.findOne({ where: { role: 'citizen' } });
+        if (citizenUser) {
+            const reporterId = citizenUser.id;
+            const mockIssues = [
+                {
+                    reporter_id: reporterId,
+                    ward_id: '993dc994-ea01-4ac1-adad-a42251e2331b', // Ward 01 - Delhi Central
+                    location: { type: 'Point', coordinates: [77.2, 28.6] },
+                    category: 'Solid Waste Management',
+                    description: 'Accumulated waste on the streets.',
+                    priority_score: 8.5,
+                    status: 'Pending',
+                    assigned_department_id: '1a6f9e45-aca4-4a6c-800f-31fc7924b775' // Environmental Services
+                },
+                {
+                    reporter_id: reporterId,
+                    ward_id: 'e90587eb-60d7-48d9-82ce-34c8ff5e600f', // Ward A-1 - Ranchi Main
+                    location: { type: 'Point', coordinates: [85.3, 23.3] },
+                    category: 'Water Supply',
+                    description: 'Main pipe burst leakage.',
+                    priority_score: 9.0,
+                    status: 'Resolved',
+                    assigned_department_id: '8a39163d-019d-415a-b178-8ca16232c905' // Water & Sewage
+                },
+                {
+                    reporter_id: reporterId,
+                    ward_id: 'b8ab9a56-52b0-4527-9623-073b250dd484', // Ward K/West - Mumbai
+                    location: { type: 'Point', coordinates: [72.8, 19.0] },
+                    category: 'Road Repairs',
+                    description: 'Major potholes on road.',
+                    priority_score: 7.2,
+                    status: 'Pending',
+                    assigned_department_id: '24ba1d92-f1be-4180-94c3-fe5f181afe51' // Public Works Department
+                },
+                {
+                    reporter_id: reporterId,
+                    ward_id: '993dc994-ea01-4ac1-adad-a42251e2331b',
+                    location: { type: 'Point', coordinates: [77.21, 28.62] },
+                    category: 'Streetlights',
+                    description: 'Flickering street pole lights.',
+                    priority_score: 6.0,
+                    status: 'Pending',
+                    assigned_department_id: '282b4ac0-9e67-40e9-99d8-b569a0f8f6e0' // Electrical Utilities
+                },
+                {
+                    reporter_id: reporterId,
+                    ward_id: 'b8ab9a56-52b0-4527-9623-073b250dd484',
+                    location: { type: 'Point', coordinates: [72.82, 19.02] },
+                    category: 'Infrastructure',
+                    description: 'Damaged public walk railing.',
+                    priority_score: 5.5,
+                    status: 'Resolved',
+                    assigned_department_id: '20a21024-5b5c-4ad0-84f2-710db1c7d693' // Infrastructure Solutions
+                }
+            ];
+
+            for (const issueData of mockIssues) {
+                await Issue.create(issueData);
+            }
+            console.log('✔ Seeded mock issues successfully.');
+        } else {
+            console.warn('⚠️ No citizen user found in DB. Skipping mock issues seeding.');
         }
 
         console.log(`Successfully seeded ${testUsers.length} professional municipal personas.`);

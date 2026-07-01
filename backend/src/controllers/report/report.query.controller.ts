@@ -11,6 +11,7 @@ export const getReports = async (req: AuthRequest, res: Response): Promise<any> 
         const whereClause = await buildReportsWhereClause(req.user, req.query);
         const issues = await Issue.findAll({
             where: whereClause,
+            include: [{ model: Ward, as: 'ward' }],
             order: [['createdAt', 'DESC']]
         });
 

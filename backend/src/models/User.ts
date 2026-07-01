@@ -99,7 +99,7 @@ User.init({
         defaultValue: [], // Array of { badgeId, awardedAt }
     },
     avatar_url: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: true,
     },
 }, {
