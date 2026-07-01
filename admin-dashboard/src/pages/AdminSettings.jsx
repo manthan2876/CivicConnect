@@ -28,7 +28,11 @@ const AdminSettings = () => {
         isVerifying,
         verificationError,
         handleSendPhoneOtp,
-        handleVerifyPhoneOtp
+        handleVerifyPhoneOtp,
+        notifications,
+        setNotifications,
+        uploadingAvatar,
+        handleAvatarChange
     } = useAdminSettings();
 
     const activeInfo = SETTINGS_SECTIONS.find(s => s.id === activeSection);
