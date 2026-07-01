@@ -233,9 +233,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
                             ),
                             const SizedBox(width: 12),
-                            const Text(
-                              'Verification Required',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                            const Expanded(
+                              child: Text(
+                                'Verification Required',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange),
+                              ),
                             ),
                           ],
                         ),

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:civic_connect_mobile/config/api_client.dart' as http;
 import '../../../config/api_config.dart';
 import '../widgets/dashboard_widgets.dart';
+import '../../../shared/utils/verification_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -185,7 +186,11 @@ class DashboardScreenState extends State<DashboardScreen> {
                           icon: Icons.add_rounded,
                           color: const Color(0xFF8B5CF6),
                           isLarge: true,
-                          onTap: () => Navigator.pushNamed(context, '/report'),
+                          onTap: () {
+                            if (VerificationHelper.checkVerification(context, action: 'submit reports')) {
+                              Navigator.pushNamed(context, '/report');
+                            }
+                          },
                         ).animate().fadeIn(delay: 500.ms).scale(begin: const Offset(0.9, 0.9)),
 
                         StatBento(
