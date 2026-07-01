@@ -204,7 +204,9 @@ export const getAuthorityKPIs = async (req: AuthRequest, res: Response): Promise
         const resolved = await Issue.count({ where: { ...where, status: 'Resolved' } });
         const pending = await Issue.count({ where: { ...where, status: 'Pending' } });
 
-        const userWhere: any = {};
+        const userWhere: any = {
+            role: { [Op.ne]: 'citizen' }
+        };
         if (department_id) {
             userWhere.department_id = department_id;
         }

@@ -92,6 +92,10 @@ const AdminSettings = () => {
                             verificationError={verificationError}
                             handleSendPhoneOtp={handleSendPhoneOtp}
                             handleVerifyPhoneOtp={handleVerifyPhoneOtp}
+                            notifications={notifications}
+                            setNotifications={setNotifications}
+                            uploadingAvatar={uploadingAvatar}
+                            handleAvatarChange={handleAvatarChange}
                         />
                     </div>
                     {activeSection !== 'danger' && (

@@ -49,6 +49,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
     });
   }
 
+  Future<void> _markAllAsRead() async {
+    setState(() => _isLoading = true);
+    await _notificationService.markAllAsRead();
+    await _loadNotifications();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -58,6 +64,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
         automaticallyImplyLeading: false,
         title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.done_all),
+            tooltip: 'Mark all as read',
+            onPressed: _markAllAsRead,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadNotifications,

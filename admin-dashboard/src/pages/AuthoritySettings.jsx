@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { User, Bell, Shield, Globe, Save, CheckCircle2, Lock } from 'lucide-react';
+import { User, Bell, Shield, Globe, Save, CheckCircle2, Lock, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usersApi } from '../services/usersApi';
+import { supabase } from '../config/supabase';
 
 const AuthoritySettings = () => {
     const { darkMode } = useOutletContext();
@@ -18,9 +19,41 @@ const AuthoritySettings = () => {
     });
 
     const [notifications, setNotifications] = useState({
-        newTasks: true,
-        urgentEscalations: true,
+        newTasks: user?.user_metadata?.notification_preferences?.newTasks ?? true,
+        urgentEscalations: user?.user_metadata?.notification_preferences?.urgentEscalations ?? true,
     });
+
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+    const handleAvatarChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploadingAvatar(true);
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            const data = await usersApi.uploadAvatar(formData);
+            
+            updateUser({
+                ...user,
+                userMetadata: {
+                    ...(user?.userMetadata || {}),
+                    avatar_url: data.avatar_url
+                },
+                user_metadata: {
+                    ...(user?.user_metadata || {}),
+                    avatar_url: data.avatar_url
+                }
+            });
+            alert('Profile photo updated successfully!');
+        } catch (err) {
+            alert('Failed to upload avatar: ' + err.message);
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
 
     const [security, setSecurity] = useState({
         currentPassword: '',
@@ -56,6 +89,21 @@ const AuthoritySettings = () => {
                     newPassword: security.newPassword
                 });
                 setSecurity({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            } else if (activeSection === 'notifications') {
+                const { error } = await supabase.auth.updateUser({
+                    data: {
+                        ...(user?.user_metadata || {}),
+                        notification_preferences: notifications
+                    }
+                });
+                if (error) throw error;
+                updateUser({
+                    ...user,
+                    user_metadata: {
+                        ...(user?.user_metadata || {}),
+                        notification_preferences: notifications
+                    }
+                });
             }
 
             setSaved(true);
@@ -72,6 +120,35 @@ const AuthoritySettings = () => {
             case 'profile':
                 return (
                     <div className="space-y-6">
+                        <div className="flex flex-col items-center gap-4 border-b border-gray-200 dark:border-white/10 pb-6 mb-6">
+                            <div className="relative group">
+                                <div className={`h-24 w-24 flex items-center justify-center text-xl font-bold rounded-3xl border-2 transition-all overflow-hidden ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}>
+                                    {user?.user_metadata?.avatar_url ? (
+                                        <img
+                                            src={user.user_metadata.avatar_url}
+                                            alt="Avatar"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'A'
+                                    )}
+                                </div>
+                                <label className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 rounded-3xl cursor-pointer transition-opacity text-xs font-bold gap-1">
+                                    <Camera size={14} />
+                                    <span>Change</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAvatarChange}
+                                        disabled={uploadingAvatar}
+                                        className="hidden"
+                                    />
+                                </label>
+                            </div>
+                            {uploadingAvatar && (
+                                <span className="text-xs text-indigo-500 font-bold animate-pulse">Uploading profile picture...</span>
+                            )}
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-xs font-black uppercase text-gray-500 mb-2">Display Name</label>
@@ -134,6 +211,35 @@ const AuthoritySettings = () => {
                                     />
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                );
+            case 'notifications':
+                return (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800/10">
+                            <div>
+                                <h4 className="font-bold text-sm">New Task Alerts</h4>
+                                <p className="text-xs text-gray-500 mt-1">Get notified when a new report is assigned to your region or department.</p>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={notifications?.newTasks ?? true}
+                                onChange={(e) => setNotifications({ ...notifications, newTasks: e.target.checked })}
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800/10">
+                            <div>
+                                <h4 className="font-bold text-sm">Urgent Escalations</h4>
+                                <p className="text-xs text-gray-500 mt-1">Get immediate alerts when an issue is marked high priority or escalated.</p>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={notifications?.urgentEscalations ?? true}
+                                onChange={(e) => setNotifications({ ...notifications, urgentEscalations: e.target.checked })}
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                            />
                         </div>
                     </div>
                 );
