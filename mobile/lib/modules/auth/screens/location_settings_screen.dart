@@ -28,11 +28,32 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
   Future<void> _loadCurrentSettings() async {
     final user = _userService.currentUser;
     if (user != null) {
-      // In a real app, you'd fetch the DB profile here. 
-      // For now, we use defaults or previous state if it was cached.
-      setState(() {
-        _isLoading = false;
-      });
+      try {
+        final profile = await _userService.getProfile();
+        if (profile != null && mounted) {
+          setState(() {
+            if (profile['alert_radius_meters'] != null) {
+              _radiusInMeters = (profile['alert_radius_meters'] as num).toDouble();
+            }
+            if (profile['home_location'] != null && profile['home_location']['coordinates'] != null) {
+              final coords = profile['home_location']['coordinates'] as List;
+              if (coords.length == 2) {
+                final double lon = (coords[0] as num).toDouble();
+                final double lat = (coords[1] as num).toDouble();
+                _selectedLocation = LatLng(lat, lon);
+              }
+            }
+          });
+        }
+      } catch (e) {
+        debugPrint('Error loading current location settings: $e');
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 

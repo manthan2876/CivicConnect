@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:civic_connect_mobile/config/api_client.dart' as http;
+import 'package:http/http.dart' as raw_http;
+import 'package:http_parser/http_parser.dart' as http_parser;
 import '../../../config/api_config.dart';
 
 class UserService {
@@ -23,8 +26,8 @@ class UserService {
       await _client.auth.updateUser(
         UserAttributes(
           data: {
-            'full_name': ?displayName,
-            'avatar_url': ?photoURL,
+            if (displayName != null) 'full_name': displayName,
+            if (photoURL != null) 'avatar_url': photoURL,
           },
         ),
       );
@@ -33,8 +36,8 @@ class UserService {
     // 2. Update Public DB Profile via Backend API
     try {
       final body = <String, dynamic>{
-        'home_location': ?homeLocation,
-        'alert_radius_meters': ?alertRadius,
+        if (homeLocation != null) 'home_location': homeLocation,
+        if (alertRadius != null) 'alert_radius_meters': alertRadius,
       };
 
 
@@ -50,6 +53,49 @@ class UserService {
       }
     } catch (e) {
       debugPrint('Error updating public DB profile: $e');
+    }
+  }
+
+  Future<String?> uploadAvatar(Uint8List bytes, String filename) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return null;
+
+    try {
+      // Create request URL pointing to users/avatar
+      final url = Uri.parse('${ApiConfig.usersUrl}/avatar');
+      
+      // Determine request URL based on fallback config
+      final requestUrl = ApiConfig.useLocalFallback 
+          ? Uri.parse(url.toString().replaceFirst(ApiConfig.primaryBaseUrl, ApiConfig.localBaseUrl)) 
+          : url;
+
+      final request = raw_http.MultipartRequest('POST', requestUrl);
+      request.headers.addAll(ApiConfig.getHeaders(includeContentType: false));
+
+      final extension = filename.split('.').last.toLowerCase();
+      final subType = (extension == 'jpg' || extension == 'jpeg') ? 'jpeg' : extension;
+
+      request.files.add(
+        raw_http.MultipartFile.fromBytes(
+          'avatar',
+          bytes,
+          filename: filename,
+          contentType: http_parser.MediaType('image', subType),
+        ),
+      );
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      final response = await raw_http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['avatar_url'];
+      } else {
+        throw Exception('Failed to upload avatar: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error uploading avatar: $e');
+      rethrow;
     }
   }
   Future<Map<String, dynamic>?> getProfile() async {

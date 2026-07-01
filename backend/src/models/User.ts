@@ -15,6 +15,7 @@ export class User extends Model {
     declare home_location: any;
     declare alert_radius_meters: number;
     declare achievements: any;
+    declare avatar_url: string | null;
     // Association populated by Sequelize `include` (RBAC roles with permissions)
     declare roles?: any[];
 }
@@ -96,6 +97,10 @@ User.init({
     achievements: {
         type: DataTypes.JSONB,
         defaultValue: [], // Array of { badgeId, awardedAt }
+    },
+    avatar_url: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
 }, {
 
