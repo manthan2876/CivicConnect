@@ -32,7 +32,9 @@ const AdminSettings = () => {
         notifications,
         setNotifications,
         uploadingAvatar,
-        handleAvatarChange
+        handleAvatarChange,
+        regional,
+        setRegional
     } = useAdminSettings();
 
     const activeInfo = SETTINGS_SECTIONS.find(s => s.id === activeSection);
