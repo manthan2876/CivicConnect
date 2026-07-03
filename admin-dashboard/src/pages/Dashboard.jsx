@@ -4,9 +4,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 import { TrendingUp, CheckCircle, Clock, AlertCircle, MoreHorizontal } from 'lucide-react';
 import { reportsApi } from '../services/reportsApi';
+import { useTranslation } from 'react-i18next';
 
 
 const Dashboard = () => {
+    const { t } = useTranslation();
     const { darkMode } = useOutletContext();
     const navigate = useNavigate();
     const COLORS = ['#10B981', '#06B6D4', '#F59E0B', '#EF4444', '#8B5CF6']; // Emerald, Cyan, Amber, Rose, Violet
@@ -31,25 +33,35 @@ const Dashboard = () => {
     }, []);
 
 
-    const StatCard = ({ title, value, color, icon: Icon, trend }) => (
-        <div className={`p-6 rounded-2xl border transition-all duration-200 ${darkMode ? 'bg-gray-900 border-gray-800 hover:border-gray-700' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
-            <div className="flex justify-between items-start mb-6">
-                <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{title}</p>
-                    <h3 className={`text-4xl font-extrabold mt-2 tracking-tighter ${darkMode ? 'text-white' : 'text-gray-900'}`}>{value}</h3>
+    const StatCard = ({ title, value, color, icon: Icon, trend }) => {
+        const statKeyMap = {
+            'Total Reports': 'dashboard.stats.total_issues',
+            'Total Issues': 'dashboard.stats.total_issues',
+            'Resolved': 'dashboard.stats.resolved',
+            'Pending': 'dashboard.stats.pending',
+            'In Progress': 'dashboard.stats.under_review',
+            'Under Review': 'dashboard.stats.under_review'
+        };
+        return (
+            <div className={`p-6 rounded-2xl border transition-all duration-200 ${darkMode ? 'bg-gray-900 border-gray-800 hover:border-gray-700' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <p className={`text-xs font-bold uppercase tracking-widest ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{t(statKeyMap[title] || title, { defaultValue: title })}</p>
+                        <h3 className={`text-4xl font-extrabold mt-2 tracking-tighter ${darkMode ? 'text-white' : 'text-gray-900'}`}>{value}</h3>
+                    </div>
+                    <div className={`p-3 rounded-xl ${darkMode ? `bg-gray-800 text-${color}-400` : `bg-gray-100 text-${color}-600`}`}>
+                        <Icon className="w-6 h-6" />
+                    </div>
                 </div>
-                <div className={`p-3 rounded-xl ${darkMode ? `bg-gray-800 text-${color}-400` : `bg-gray-100 text-${color}-600`}`}>
-                    <Icon className="w-6 h-6" />
+                <div className="flex items-center text-xs font-semibold text-gray-500">
+                    <span className={`flex items-center px-2 py-1 rounded-md mr-2 ${darkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
+                        <TrendingUp className="w-3.5 h-3.5 mr-1" /> {trend}%
+                    </span>
+                    <span>{t('dashboard.stats.vs_last_month', { defaultValue: 'vs last month' })}</span>
                 </div>
             </div>
-            <div className="flex items-center text-xs font-semibold text-gray-500">
-                <span className={`flex items-center px-2 py-1 rounded-md mr-2 ${darkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
-                    <TrendingUp className="w-3.5 h-3.5 mr-1" /> {trend}%
-                </span>
-                <span>vs last month</span>
-            </div>
-        </div>
-    );
+        );
+    };
 
     const handleDownloadReport = () => {
         if (!issues || issues.length === 0) {
@@ -91,18 +103,18 @@ const Dashboard = () => {
         <div className="space-y-8 animate-fade-in-up">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Dashboard Overview</h1>
-                    <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Welcome back, Admin. Here's what's happening in your city.</p>
+                    <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t('dashboard.title', { defaultValue: 'Dashboard Overview' })}</h1>
+                    <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{t('dashboard.subtitle', { defaultValue: "Welcome back, Admin. Here's what's happening in your city." })}</p>
                 </div>
                 <button
                     onClick={handleDownloadReport}
                     className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all border ${darkMode ? 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700' : 'bg-white hover:bg-gray-50 text-gray-900 border-gray-200 shadow-sm'}`}>
-                    Download Report
+                    {t('dashboard.download_report', { defaultValue: 'Download Report' })}
                 </button>
             </div>
 
             {/* Loading state */}
-            {loading && <div className="p-8 text-center">Loading dashboard...</div>}
+            {loading && <div className="p-8 text-center">{t('dashboard.loading', { defaultValue: 'Loading dashboard...' })}</div>}
 
             {/* Stats Grid */}
             {!loading && stats.summary && (
@@ -125,7 +137,7 @@ const Dashboard = () => {
                 {/* Bar Chart */}
                 <div className={`lg:col-span-2 p-8 rounded-2xl border ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Issues by Category</h2>
+                        <h2 className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{t('dashboard.charts.categories', { defaultValue: 'Issues by Category' })}</h2>
                         <button className="text-gray-400 hover:text-gray-600"><MoreHorizontal /></button>
                     </div>
                     <div className="h-80">
@@ -155,14 +167,14 @@ const Dashboard = () => {
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-full flex items-center justify-center text-gray-500 italic text-sm">Synchronizing data streams...</div>
+                            <div className="h-full flex items-center justify-center text-gray-500 italic text-sm">{t('dashboard.charts.sync_data', { defaultValue: 'Synchronizing data streams...' })}</div>
                         )}
                     </div>
                 </div>
 
                 {/* Pie Chart */}
                 <div className={`p-8 rounded-2xl border flex flex-col justify-between ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
-                    <h2 className={`mb-6 text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Resolution Status</h2>
+                    <h2 className={`mb-6 text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{t('dashboard.charts.trends', { defaultValue: 'Resolution Status' })}</h2>
                     <div className="h-64 flex justify-center relative">
                         {stats.categoryData && stats.categoryData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
@@ -192,12 +204,12 @@ const Dashboard = () => {
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (
-                             <div className="h-full flex items-center justify-center text-gray-500 italic text-sm">Mapping resolution metrics...</div>
+                             <div className="h-full flex items-center justify-center text-gray-500 italic text-sm">{t('dashboard.charts.mapping_metrics', { defaultValue: 'Mapping resolution metrics...' })}</div>
                         )}
                         {stats.summary && stats.summary[0] && (
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[60%] text-center pointer-events-none">
                                 <span className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.summary[0].value}</span>
-                                <p className="text-xs text-gray-500">Total</p>
+                                <p className="text-xs text-gray-500">{t('dashboard.total', { defaultValue: 'Total' })}</p>
                             </div>
                         )}
                     </div>
@@ -207,12 +219,12 @@ const Dashboard = () => {
             {/* Recent Activity */}
             <div className={`p-8 rounded-2xl border ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Recent Activity</h2>
+                    <h2 className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{t('dashboard.recent_reports.title', { defaultValue: 'Recent Activity' })}</h2>
                     <button
                         onClick={() => navigate('/admin/issues')}
                         className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                     >
-                        View All
+                        {t('dashboard.recent_reports.view', { defaultValue: 'View All' })}
                     </button>
                 </div>
                 <div className="space-y-4">
@@ -227,7 +239,7 @@ const Dashboard = () => {
                                     <Clock size={16} strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <p className={`font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>New Report: {issue.category}</p>
+                                    <p className={`font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{t('dashboard.new_report', { defaultValue: 'New Report' })}: {issue.category}</p>
                                     <p className="text-sm text-gray-500 truncate max-w-xs">ID: {issue.id.slice(0, 8)}...</p>
                                 </div>
                             </div>
@@ -237,7 +249,7 @@ const Dashboard = () => {
                         </div>
                     ))}
 
-                    {issues.length === 0 && <p className="text-center text-gray-500 py-4">No recent activity found.</p>}
+                    {issues.length === 0 && <p className="text-center text-gray-500 py-4">{t('dashboard.no_recent_activity', { defaultValue: 'No recent activity found.' })}</p>}
                 </div>
             </div>
         </div>

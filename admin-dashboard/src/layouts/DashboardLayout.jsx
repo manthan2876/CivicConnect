@@ -5,9 +5,11 @@ import { Bell, Search, Moon, Sun, Menu, X, Terminal, FileText, User as UserIcon,
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
 import { useUniversalSearch } from '../hooks/useUniversalSearch';
+import { useTranslation } from 'react-i18next';
 
 
 const DashboardLayout = () => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -158,7 +160,7 @@ const DashboardLayout = () => {
                             <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                             <input
                                 type="text"
-                                placeholder="Search system..."
+                                placeholder={t('dashboard.search_placeholder', { defaultValue: 'Search system...' })}
                                 value={searchQuery}
                                 onFocus={() => {
                                     prefetchSearchData();

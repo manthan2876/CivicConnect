@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, AlertTriangle, Trash2, CheckCircle2, Phone, Loader2, Camera } from 'lucide-react';
+import { Lock, AlertTriangle, Trash2, CheckCircle2, Phone, Loader2, Camera, Globe } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
 const SettingsSection = ({
@@ -25,7 +25,9 @@ const SettingsSection = ({
     notifications,
     setNotifications,
     uploadingAvatar,
-    handleAvatarChange
+    handleAvatarChange,
+    regional,
+    setRegional
 }) => {
     const { user } = useAuth();
 
@@ -333,6 +335,43 @@ const SettingsSection = ({
                             onChange={(e) => setNotifications({ ...notifications, issueUpdates: e.target.checked })}
                             className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500 cursor-pointer"
                         />
+                    </div>
+                </div>
+            );
+        case 'regional':
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <div className="p-6 rounded-2xl bg-violet-500/5 border border-violet-500/10 flex items-start gap-4">
+                        <Globe className="text-violet-500 shrink-0 mt-1" />
+                        <div>
+                            <h4 className="font-bold text-violet-500">Localization Settings</h4>
+                            <p className="text-xs text-violet-400 mt-1">Configure language preference and timezones for your administration portal.</p>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-black uppercase text-gray-500 mb-2">Interface Language</label>
+                            <select
+                                value={regional.language}
+                                onChange={(e) => setRegional({ ...regional, language: e.target.value })}
+                                className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                            >
+                                <option value="en">English (English)</option>
+                                <option value="hi">Hindi (हिन्दी)</option>
+                                <option value="gu">Gujarati (ગુજરાતી)</option>
+                                <option value="mr">Marathi (मराठी)</option>
+                                <option value="ta">Tamil (தமிழ்)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-black uppercase text-gray-500 mb-2">Operational Timezone</label>
+                            <input
+                                type="text"
+                                value={regional.timezone}
+                                onChange={(e) => setRegional({ ...regional, timezone: e.target.value })}
+                                className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                            />
+                        </div>
                     </div>
                 </div>
             );

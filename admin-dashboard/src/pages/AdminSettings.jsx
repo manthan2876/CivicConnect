@@ -100,6 +100,8 @@ const AdminSettings = () => {
                             setNotifications={setNotifications}
                             uploadingAvatar={uploadingAvatar}
                             handleAvatarChange={handleAvatarChange}
+                            regional={regional}
+                            setRegional={setRegional}
                         />
                     </div>
                     {activeSection !== 'danger' && (

@@ -1,0 +1,48 @@
+{
+  "sidebar": {
+    "dashboard": "डैशबोर्ड",
+    "issues": "समस्याएं",
+    "map": "लाइव नक्शा",
+    "leaderboard": "लीडरबोर्ड",
+    "jurisdictions": "अधिकार क्षेत्र",
+    "users": "उपयोगकर्ता",
+    "analytics": "कार्यकारी एआई",
+    "ai_retraining": "एआई पुनश्चर्या",
+    "departments": "विभाग",
+    "audit_logs": "ऑडिट लॉग",
+    "settings": "सेटिंग्स",
+    "sign_out": "साइन आउट",
+    "municipal_hub": "नगर पालिका हब"
+  },
+  "dashboard": {
+    "title": "नगर पालिका अवलोकन",
+    "subtitle": "नागरिक रिपोर्ट, कर्मचारी समाधान और एआई छंटनी का वास्तविक समय सिंक।",
+    "stats": {
+      "total_issues": "कुल रिपोर्ट",
+      "resolved": "हल की गई",
+      "pending": "लंबित कार्रवाई",
+      "under_review": "समीक्षाधीन"
+    },
+    "charts": {
+      "categories": "समस्या श्रेणियां",
+      "trends": "मासिक समाधान रुझान"
+    },
+    "recent_reports": {
+      "title": "हाल की रिपोर्ट",
+      "reporter": "रिपोर्टर",
+      "category": "श्रेणी",
+      "status": "स्थिति",
+      "reported_at": "रिपोर्ट की तारीख",
+      "actions": "कार्रवाई",
+      "view": "देखें"
+    }
+  },
+  "settings": {
+    "regional_title": "भौगोलिक और भाषा सेटिंग्स",
+    "regional_desc": "अपनी स्थानीय समय और भाषा प्राथमिकताएं निर्धारित करें।",
+    "language": "इंटरफ़ेस भाषा",
+    "timezone": "परिचालन समय क्षेत्र",
+    "select_language": "भाषा चुनें",
+    "success_save": "व्यवस्थापक कॉन्फ़िगरेशन अपडेट किया गया!"
+  }
+}

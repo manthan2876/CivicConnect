@@ -3,6 +3,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { usersApi } from '../../../services/usersApi';
 import { adminApi } from '../../../services/adminApi';
 import { supabase } from '../../../config/supabase';
+import i18n from '../../../config/i18n';
 
 export const useAdminSettings = () => {
     const { user, updateUser, logout, linkPhone, verifyLinkedPhone } = useAuth();
@@ -97,8 +98,8 @@ export const useAdminSettings = () => {
     });
 
     const [regional, setRegional] = useState({
-        language: 'English (US)',
-        timezone: 'GMT+05:30 IST',
+        language: localStorage.getItem('language') || user?.user_metadata?.language || 'en',
+        timezone: localStorage.getItem('timezone') || user?.user_metadata?.timezone || 'GMT+05:30 IST',
     });
 
     const [system, setSystem] = useState({
@@ -142,6 +143,28 @@ export const useAdminSettings = () => {
                     user_metadata: {
                         ...(user?.user_metadata || {}),
                         notification_preferences: notifications
+                    }
+                });
+            } else if (activeSection === 'regional') {
+                localStorage.setItem('language', regional.language);
+                localStorage.setItem('timezone', regional.timezone);
+                i18n.changeLanguage(regional.language);
+
+                const { error } = await supabase.auth.updateUser({
+                    data: {
+                        ...(user?.user_metadata || {}),
+                        language: regional.language,
+                        timezone: regional.timezone
+                    }
+                });
+                if (error) throw error;
+                
+                updateUser({
+                    ...user,
+                    user_metadata: {
+                        ...(user?.user_metadata || {}),
+                        language: regional.language,
+                        timezone: regional.timezone
                     }
                 });
             }
