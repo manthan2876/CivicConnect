@@ -41,19 +41,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
   void _loginWithEmail() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter both email and password.')),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address.')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
-      await _authService.loginWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+      await _authService.loginWithEmail(email, password);
       if (!mounted) return;
+      setState(() => _isLoading = false);
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      final message = e.toString().contains('Invalid login credentials')
+          ? 'Invalid email or password. Please try again.'
+          : 'Login failed. Please check your connection and try again.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Failed: $e')),
+        SnackBar(content: Text(message)),
       );
     }
   }
