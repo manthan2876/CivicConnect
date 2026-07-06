@@ -7,9 +7,10 @@ on:
 
 jobs:
   process-pending-jobs:
-    if: ${{ secrets.SUPABASE_URL != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -24,8 +25,8 @@ jobs:
           pip install -r scripts/batch_processor/requirements.txt
 
       - name: Run batch processor
+        if: ${{ env.SUPABASE_URL != '' }}
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
