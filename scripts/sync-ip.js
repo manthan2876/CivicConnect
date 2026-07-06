@@ -9,7 +9,7 @@ const path = require('path');
 
 function getLocalIP() {
     const interfaces = os.networkInterfaces();
-    
+
     // adapter categories
     const preferred = ['wi-fi', 'wireless', 'wifi', 'wlan'];
     const secondary = ['ethernet', 'en0', 'eth0'];
@@ -19,7 +19,7 @@ function getLocalIP() {
     for (const name of Object.keys(interfaces)) {
         const lowerName = name.toLowerCase();
         if (excluded.some(e => lowerName.includes(e))) continue;
-        
+
         if (preferred.some(p => lowerName.includes(p))) {
             for (const iface of interfaces[name]) {
                 if (iface.family === 'IPv4' && !iface.internal) return iface.address;
@@ -67,7 +67,7 @@ const envFiles = [
         path: path.join(__dirname, '..', 'backend', '.env'),
         rules: [
             { regex: /BASE_URL=http:\/\/[0-9.]+(:\d+)/g, replace: `BASE_URL=http://${newIP}$1` },
-            { regex: /MINIO_ENDPOINT=[0-9.]+/g, replace: `MINIO_ENDPOINT=${newIP}` }
+            { regex: /AWS_ENDPOINT=[0-9.]+/g, replace: `AWS_ENDPOINT=${newIP}` }
         ]
     },
     {

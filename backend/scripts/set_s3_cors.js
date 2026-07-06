@@ -9,12 +9,12 @@ const __dirname = path.dirname(__filename);
 // Load env from backend/.env
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const bucketName = process.env.MINIO_BUCKET || 'civic-connect-data';
-const accessKey = process.env.MINIO_ACCESS_KEY;
-const secretKey = process.env.MINIO_SECRET_KEY;
+const bucketName = process.env.AWS_BUCKET || 'civic-connect-data';
+const accessKey = process.env.AWS_ACCESS_KEY;
+const secretKey = process.env.AWS_SECRET_KEY;
 
 if (!accessKey || !secretKey) {
-  console.error("AWS credentials missing in .env file (MINIO_ACCESS_KEY or MINIO_SECRET_KEY)");
+  console.error("AWS credentials missing in .env file (AWS_ACCESS_KEY or AWS_SECRET_KEY)");
   process.exit(1);
 }
 
