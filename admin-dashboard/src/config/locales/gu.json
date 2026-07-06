@@ -1,0 +1,48 @@
+{
+  "sidebar": {
+    "dashboard": "ડેશબોર્ડ",
+    "issues": "પ્રશ્નો",
+    "map": "લાઇવ નકશો",
+    "leaderboard": "લીડરબોર્ડ",
+    "jurisdictions": "અધિકાર ક્ષેત્ર",
+    "users": "વપરાશકર્તાઓ",
+    "analytics": "કાર્યકારી AI",
+    "ai_retraining": "AI પુનઃતાલીમ",
+    "departments": "વિભાગો",
+    "audit_logs": "ઑડિટ લૉગ",
+    "settings": "સેટિંગ્સ",
+    "sign_out": "સાઇન આઉટ",
+    "municipal_hub": "મ્યુનિસિપલ હબ"
+  },
+  "dashboard": {
+    "title": "મ્યુનિસિપલ વિહંગાવલોકન",
+    "subtitle": "નાગરિક અહેવાલો, સ્ટાફ રિઝોલ્યુશન અને AI વર્ગીકરણનું રીઅલ-ટાઇમ સિંક.",
+    "stats": {
+      "total_issues": "કુલ અહેવાલો",
+      "resolved": "ઉકેલાયેલ",
+      "pending": "બાકી પ્રક્રિયાઓ",
+      "under_review": "સમીક્ષા હેઠળ"
+    },
+    "charts": {
+      "categories": "સમસ્યા શ્રેણીઓ",
+      "trends": "માસિક ઉકેલના પ્રવાહો"
+    },
+    "recent_reports": {
+      "title": "તાજેતરના અહેવાલો",
+      "reporter": "અહેવાલકર્તા",
+      "category": "શ્રેણી",
+      "status": "સ્થિતિ",
+      "reported_at": "અહેવાલ સમય",
+      "actions": "ક્રિયાઓ",
+      "view": "જુઓ"
+    }
+  },
+  "settings": {
+    "regional_title": "ભૌગોલિક અને ભાષા સેટિંગ્સ",
+    "regional_desc": "તમારી સ્થાનિક સમય અને ભાષા પસંદગીઓ સેટ કરો.",
+    "language": "ઇન્ટરફેસ ભાષા",
+    "timezone": "ઓપરેશનલ સમય ઝોન",
+    "select_language": "ભાષા પસંદ કરો",
+    "success_save": "એડમિન રૂપરેખાંકન અપડેટ કરવામાં આવ્યું!"
+  }
+}

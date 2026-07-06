@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { User, Department, Ward, Issue, Repair, AuditLog, Notification, AIFeedback, UserDevice, UserRole, UlbBoundary, ProcessingJob, sequelize } from '../config/db.js';
+import { User, Department, Ward, Issue, Repair, AuditLog, Notification, AIFeedback, UserDevice, UserRole, UlbBoundary, ProcessingJob, Zone, sequelize } from '../config/db.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { Op } from 'sequelize';
 
@@ -69,9 +69,10 @@ export const wipeData = async (req: AuthRequest, res: Response) => {
             transaction
         });
 
-        // Delete Wards, Departments, and ULB boundaries
+        // Delete Wards, Departments, Zones, and ULB boundaries
         await Ward.destroy({ where: {}, transaction });
         await Department.destroy({ where: {}, transaction });
+        await Zone.destroy({ where: {}, transaction });
         await UlbBoundary.destroy({ where: {}, transaction });
 
         // Wipe Audit Logs

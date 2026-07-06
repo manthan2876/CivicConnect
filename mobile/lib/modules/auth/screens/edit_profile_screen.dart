@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../services/user_service.dart';
 import '../services/auth_service.dart';
@@ -18,6 +20,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   bool _isLoading = false;
+  Uint8List? _pickedImageBytes;
+  String? _pickedImageName;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -125,12 +130,66 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  Future<void> _showImageSourceActionSheet(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? photo = await _picker.pickImage(
+        source: source,
+        maxWidth: 500,
+        maxHeight: 500,
+        imageQuality: 85,
+      );
+      if (photo != null) {
+        final bytes = await photo.readAsBytes();
+        setState(() {
+          _pickedImageBytes = bytes;
+          _pickedImageName = photo.name;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+  }
+
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
+        String? avatarUrl;
+        if (_pickedImageBytes != null && _pickedImageName != null) {
+          avatarUrl = await _userService.uploadAvatar(_pickedImageBytes!, _pickedImageName!);
+        }
+
         await _userService.updateProfile(
           displayName: _nameController.text.trim(),
+          photoURL: avatarUrl,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -153,6 +212,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final user = _userService.currentUser;
     
     return Scaffold(
       appBar: AppBar(
@@ -169,26 +229,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-
-
-
-                          child: Icon(Icons.person, size: 70, color: theme.colorScheme.primary),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: CircleAvatar(
-                            backgroundColor: theme.colorScheme.secondary,
-                            radius: 18,
-                            child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                    child: GestureDetector(
+                      onTap: () => _showImageSourceActionSheet(context),
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            child: _pickedImageBytes != null
+                                ? ClipOval(
+                                    child: Image.memory(
+                                      _pickedImageBytes!,
+                                      width: 120,
+                                      height: 120,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : user?.userMetadata?['avatar_url'] != null
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          user!.userMetadata!['avatar_url']!,
+                                          width: 120,
+                                          height: 120,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Icon(Icons.person, size: 70, color: theme.colorScheme.primary),
                           ),
-                        ),
-                      ],
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: CircleAvatar(
+                              backgroundColor: theme.colorScheme.secondary,
+                              radius: 18,
+                              child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),

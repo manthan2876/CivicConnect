@@ -35,15 +35,15 @@ SUPABASE_SERVICE_ROLE = get_env('SUPABASE_SERVICE_ROLE',   required=True)
 
 AWS_ACCESS_KEY_ID = (
     get_env("AWS_ACCESS_KEY_ID")
-    or get_env("MINIO_ACCESS_KEY")
+    or get_env("AWS_ACCESS_KEY")
 )
 AWS_SECRET_ACCESS_KEY = (
     get_env("AWS_SECRET_ACCESS_KEY")
-    or get_env("MINIO_SECRET_KEY")
+    or get_env("AWS_SECRET_KEY")
 )
 if not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
     raise Exception("Missing S3/MinIO credentials: set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY "
-                    "or MINIO_ACCESS_KEY/MINIO_SECRET_KEY")
+                    "or AWS_ACCESS_KEY/AWS_SECRET_KEY")
 
 AWS_REGION   = get_env('AWS_REGION',            'ap-south-1')
 HF_TOKEN     = get_env('HF_TOKEN')
@@ -51,7 +51,7 @@ HF_MODEL_ID  = get_env('HF_MODEL_ID',           'manthan2876/CivicConnect-Classi
 GROQ_API_KEY = get_env('OPEN_SOURCE_LLM_KEY',   required=True)
 GROQ_URL     = get_env('OPEN_SOURCE_LLM_URL',   'https://api.groq.com/openai/v1')
 LLM_MODEL    = get_env('LLM_MODEL',             'llama-3.1-8b-instant')
-BUCKET       = get_env('MINIO_BUCKET',           'civic-connect-data')
+BUCKET       = get_env('AWS_BUCKET',           'civic-connect-data')
 
 MAX_RETRIES = 3
 

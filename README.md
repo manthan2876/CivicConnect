@@ -53,7 +53,7 @@ For the mobile app to communicate with the backend, you must use your machine's 
 1. **Find your IP**: Open Terminal/PowerShell and type `ipconfig`. Look for "IPv4 Address" (e.g., `192.168.1.5`).
 2. **Set Backend BASE_URL**: In `backend/.env`, set `BASE_URL=http://192.168.1.5:5000`.
 3. **Set Mobile API_BASE_URL**: In `mobile/.env`, set `API_BASE_URL=http://192.168.1.5:5000/api`.
-4. **Set MINIO_ENDPOINT**: In `backend/.env`, set `MINIO_ENDPOINT=192.168.1.5`.
+4. **Set AWS_ENDPOINT**: In `backend/.env`, set `AWS_ENDPOINT=192.168.1.5`.
 
 ---
 

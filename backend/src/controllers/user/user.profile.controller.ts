@@ -5,6 +5,8 @@ import { GamificationService } from '../../services/gamificationService.js';
 import { AuditService } from '../../services/auditService.js';
 import { Op } from 'sequelize';
 import type { AuthRequest } from './user.utils.js';
+import { StorageService } from '../../services/storageService.js';
+import { supabaseAdmin } from '../../config/supabase.js';
 
 export const updateDeviceToken = async (req: AuthRequest, res: Response) => {
     try {
@@ -159,8 +161,29 @@ export const getMyProfile = async (req: AuthRequest, res: Response) => {
         const attachedPermissions = (user as any).roles?.flatMap((r: any) => (r.permissions || []).map((p: any) => p.key)) || [];
         const attachedRoles = (user as any).roles?.map((r: any) => r.name) || [];
         
+        const userData = user.toJSON();
+        if (userData.avatar_url) {
+            try {
+                const freshPresignedUrl = await StorageService.getPresignedUrl(userData.avatar_url);
+                userData.avatar_url = freshPresignedUrl;
+
+                // Sync with Supabase Auth metadata asynchronously
+                const userMetadata = req.user?.user_metadata || {};
+                if (userMetadata.avatar_url !== freshPresignedUrl) {
+                    supabaseAdmin.auth.admin.updateUserById(user.id, {
+                        user_metadata: {
+                            ...userMetadata,
+                            avatar_url: freshPresignedUrl
+                        }
+                    }).catch((err: any) => console.error('[Supabase Sync Error]', err.message));
+                }
+            } catch (err: any) {
+                console.error('Error generating presigned URL for avatar:', err.message);
+            }
+        }
+
         res.json({
-            ...user.toJSON(),
+            ...userData,
             roles: attachedRoles,
             permissions: attachedPermissions
         });

@@ -48,6 +48,7 @@ async function migrateEnumRoles(): Promise<void> {
 async function runMigrations(): Promise<void> {
     try {
         await sequelize.query(`
+            ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "avatar_url" TEXT;
             ALTER TABLE "issues" ADD COLUMN IF NOT EXISTS "embedding" vector(1536);
             ALTER TABLE "issues" ADD COLUMN IF NOT EXISTS "audio_text" TEXT;
             ALTER TABLE "issues" ADD COLUMN IF NOT EXISTS "assigned_department_id" UUID REFERENCES "departments" ("id") ON DELETE SET NULL;
@@ -96,8 +97,14 @@ export const connectPostgres = async (): Promise<void> => {
 
         const isProduction = process.env.NODE_ENV === 'production';
         const forceAlter = process.env.FORCE_DB_ALTER === 'true';
-        await sequelize.sync({ alter: !isProduction || forceAlter });
-        console.log(`Database tables synced (alter: ${!isProduction || forceAlter})`);
+        try {
+            await sequelize.sync({ alter: !isProduction || forceAlter });
+            console.log(`Database tables synced (alter: ${!isProduction || forceAlter})`);
+        } catch (syncErr: any) {
+            console.warn('Sequelize sync alter failed, falling back to basic sync:', syncErr.message);
+            await sequelize.sync();
+            console.log('Database basic sync completed successfully');
+        }
 
         await migrateEnumRoles();
         await runMigrations();

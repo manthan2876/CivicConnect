@@ -5,7 +5,7 @@ class ThemeProvider with ChangeNotifier {
   static const String _boxName = 'settings';
   static const String _themeKey = 'theme_mode';
 
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.dark;
 
   ThemeMode get themeMode => _themeMode;
 
@@ -15,7 +15,7 @@ class ThemeProvider with ChangeNotifier {
 
   void _loadTheme() {
     final box = Hive.box(_boxName);
-    final themeIndex = box.get(_themeKey, defaultValue: 0);
+    final themeIndex = box.get(_themeKey, defaultValue: ThemeMode.dark.index);
     _themeMode = ThemeMode.values[themeIndex];
     notifyListeners();
   }

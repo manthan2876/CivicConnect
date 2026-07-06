@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { usersApi } from '../../../services/usersApi';
 import { adminApi } from '../../../services/adminApi';
+import { supabase } from '../../../config/supabase';
+import i18n from '../../../config/i18n';
 
 export const useAdminSettings = () => {
     const { user, updateUser, logout, linkPhone, verifyLinkedPhone } = useAuth();
@@ -52,10 +54,42 @@ export const useAdminSettings = () => {
     };
 
     const [notifications, setNotifications] = useState({
-        systemAlerts: true,
-        emailNotifications: true,
-        issueUpdates: true,
+        systemAlerts: user?.user_metadata?.notification_preferences?.systemAlerts ?? true,
+        emailNotifications: user?.user_metadata?.notification_preferences?.emailNotifications ?? true,
+        issueUpdates: user?.user_metadata?.notification_preferences?.issueUpdates ?? true,
     });
+
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+    const handleAvatarChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploadingAvatar(true);
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            const data = await usersApi.uploadAvatar(formData);
+            
+            updateUser({
+                ...user,
+                userMetadata: {
+                    ...(user?.userMetadata || {}),
+                    avatar_url: data.avatar_url
+                },
+                user_metadata: {
+                    ...(user?.user_metadata || {}),
+                    avatar_url: data.avatar_url
+                }
+            });
+            alert('Profile photo updated successfully!');
+        } catch (err) {
+            alert('Failed to upload avatar: ' + err.message);
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
 
     const [security, setSecurity] = useState({
         currentPassword: '',
@@ -64,8 +98,8 @@ export const useAdminSettings = () => {
     });
 
     const [regional, setRegional] = useState({
-        language: 'English (US)',
-        timezone: 'GMT+05:30 IST',
+        language: localStorage.getItem('language') || user?.user_metadata?.language || 'en',
+        timezone: localStorage.getItem('timezone') || user?.user_metadata?.timezone || 'GMT+05:30 IST',
     });
 
     const [system, setSystem] = useState({
@@ -96,6 +130,43 @@ export const useAdminSettings = () => {
                     newPassword: security.newPassword
                 });
                 setSecurity({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            } else if (activeSection === 'notifications') {
+                const { error } = await supabase.auth.updateUser({
+                    data: {
+                        ...(user?.user_metadata || {}),
+                        notification_preferences: notifications
+                    }
+                });
+                if (error) throw error;
+                updateUser({
+                    ...user,
+                    user_metadata: {
+                        ...(user?.user_metadata || {}),
+                        notification_preferences: notifications
+                    }
+                });
+            } else if (activeSection === 'regional') {
+                localStorage.setItem('language', regional.language);
+                localStorage.setItem('timezone', regional.timezone);
+                i18n.changeLanguage(regional.language);
+
+                const { error } = await supabase.auth.updateUser({
+                    data: {
+                        ...(user?.user_metadata || {}),
+                        language: regional.language,
+                        timezone: regional.timezone
+                    }
+                });
+                if (error) throw error;
+                
+                updateUser({
+                    ...user,
+                    user_metadata: {
+                        ...(user?.user_metadata || {}),
+                        language: regional.language,
+                        timezone: regional.timezone
+                    }
+                });
             }
 
             setSaved(true);
@@ -151,5 +222,7 @@ export const useAdminSettings = () => {
         verificationError,
         handleSendPhoneOtp,
         handleVerifyPhoneOtp,
+        uploadingAvatar,
+        handleAvatarChange
     };
 };

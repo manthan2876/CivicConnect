@@ -44,8 +44,14 @@ const seedDatabase = async () => {
         } catch (e) {}
 
         // 2. Sync Schema (Ensures tables exist and are up to date before truncation)
-        await sequelize.sync({ alter: true });
-        console.log('✔ Database schema synchronized (with alter).');
+        try {
+            await sequelize.sync({ alter: true });
+            console.log('✔ Database schema synchronized (with alter).');
+        } catch (error: any) {
+            console.warn('⚠️ Sequelize sync alter failed, falling back to basic sync:', error.message);
+            await sequelize.sync();
+            console.log('✔ Database schema basic sync completed successfully.');
+        }
 
         // 3. Clear critical tables if they exist to prevent duplication
         await sequelize.query('TRUNCATE TABLE "users", "wards", "departments", "ulb_boundaries" CASCADE');

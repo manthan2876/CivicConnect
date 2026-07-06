@@ -1,0 +1,48 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "issues": "Issues",
+    "map": "Live Map",
+    "leaderboard": "Leaderboard",
+    "jurisdictions": "Jurisdictions",
+    "users": "Users",
+    "analytics": "Executive AI",
+    "ai_retraining": "AI Retraining",
+    "departments": "Departments",
+    "audit_logs": "Audit Trail",
+    "settings": "Settings",
+    "sign_out": "Sign Out",
+    "municipal_hub": "MUNICIPAL HUB"
+  },
+  "dashboard": {
+    "title": "Municipal Overview",
+    "subtitle": "Real-time sync of civic reports, staff resolutions, and AI triage.",
+    "stats": {
+      "total_issues": "Total Reports",
+      "resolved": "Resolved",
+      "pending": "Pending Actions",
+      "under_review": "Under Review"
+    },
+    "charts": {
+      "categories": "Issue Categories",
+      "trends": "Monthly Resolution Trends"
+    },
+    "recent_reports": {
+      "title": "Recent Reports",
+      "reporter": "Reporter",
+      "category": "Category",
+      "status": "Status",
+      "reported_at": "Reported At",
+      "actions": "Actions",
+      "view": "View"
+    }
+  },
+  "settings": {
+    "regional_title": "Geo & Language Settings",
+    "regional_desc": "Set your local time and language preferences.",
+    "language": "Interface Language",
+    "timezone": "Operational Timezone",
+    "select_language": "Select Language",
+    "success_save": "Admin Config Updated!"
+  }
+}

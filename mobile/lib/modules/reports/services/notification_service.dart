@@ -5,6 +5,7 @@ import 'package:civic_connect_mobile/config/api_client.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:hive/hive.dart';
 import '../../../config/api_config.dart';
 
 class NotificationService {
@@ -120,6 +121,37 @@ class NotificationService {
   }
 
   Future<void> _showLocalNotification(String title, String body, {Map<String, dynamic>? data}) async {
+    try {
+      final box = Hive.box('settings');
+      final pushEnabled = box.get('push_notifications', defaultValue: true);
+      if (!pushEnabled) {
+        debugPrint('[Notification] Suppressed local display (Push Notifications disabled in settings).');
+        return;
+      }
+      
+      final t = title.toLowerCase();
+      final isUpdate = t.contains('update') || t.contains('resolve') || t.contains('assign') || t.contains('comment');
+      final isAlert = t.contains('alert') || t.contains('urgent') || t.contains('warn');
+      
+      if (isUpdate) {
+        final reportUpdatesEnabled = box.get('report_updates', defaultValue: true);
+        if (!reportUpdatesEnabled) {
+          debugPrint('[Notification] Suppressed local display (Report Updates disabled in settings).');
+          return;
+        }
+      }
+      
+      if (isAlert) {
+        final communityAlertsEnabled = box.get('community_alerts', defaultValue: false);
+        if (!communityAlertsEnabled) {
+          debugPrint('[Notification] Suppressed local display (Community Alerts disabled in settings).');
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading Hive notification settings: $e');
+    }
+
     if (kIsWeb) {
       debugPrint('[Web Notification] $title: $body');
       return;
@@ -171,6 +203,17 @@ class NotificationService {
       );
     } catch (e) {
       debugPrint('Error marking notification as read: $e');
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    try {
+      await http.patch(
+        Uri.parse('${ApiConfig.baseUrl}/notifications/read-all'),
+        headers: ApiConfig.getHeaders(),
+      );
+    } catch (e) {
+      debugPrint('Error marking all notifications as read: $e');
     }
   }
 }

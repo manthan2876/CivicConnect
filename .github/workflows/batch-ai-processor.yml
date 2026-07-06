@@ -7,6 +7,7 @@ on:
 
 jobs:
   process-pending-jobs:
+    if: ${{ secrets.SUPABASE_URL != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

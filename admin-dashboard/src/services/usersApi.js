@@ -13,6 +13,7 @@ export const usersApi = {
     updateProfile: (id, data) => api.patch(`/auth/update-profile/${id}`, data),
     changePassword: (data) => api.post('/auth/change-password', data),
     getMe: () => api.get('/users/me'),
+    uploadAvatar: (formData) => api.post('/users/avatar', formData),
 
     // Administrative User Actions
     getAll: (params) => api.get(`/users${qs(params)}`),

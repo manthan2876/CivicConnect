@@ -6,8 +6,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
+import { useTranslation } from 'react-i18next';
 
 const Sidebar = ({ darkMode, isOpen, setIsOpen }) => {
+    const { t } = useTranslation();
     const location = useLocation();
     const { user, logout } = useAuth();
     const isActive = (path) => location.pathname === path;
@@ -108,7 +110,7 @@ const Sidebar = ({ darkMode, isOpen, setIsOpen }) => {
                     <h1 className={`text-lg font-black tracking-tight transition-colors ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                         Civic<span className="text-violet-500">Connect</span>
                     </h1>
-                    <p className={`text-[9px] font-black tracking-[0.2em] uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>MUNICIPAL HUB</p>
+                    <p className={`text-[9px] font-black tracking-[0.2em] uppercase ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>{t('sidebar.municipal_hub')}</p>
                 </div>
             </div>
 
@@ -117,6 +119,20 @@ const Sidebar = ({ darkMode, isOpen, setIsOpen }) => {
                 <nav className="space-y-1">
                     {navItems.map((item) => {
                         const active = isActive(item.path);
+                        const keyMap = {
+                            'Dashboard': 'sidebar.dashboard',
+                            'Issues': 'sidebar.issues',
+                            'Live Map': 'sidebar.map',
+                            'Leaderboard': 'sidebar.leaderboard',
+                            'Jurisdictions': 'sidebar.jurisdictions',
+                            'Users': 'sidebar.users',
+                            'Executive AI': 'sidebar.analytics',
+                            'AI Retraining': 'sidebar.ai_retraining',
+                            'Departments': 'sidebar.departments',
+                            'Audit Trail': 'sidebar.audit_logs',
+                            'Settings': 'sidebar.settings'
+                        };
+                        const translationKey = keyMap[item.label] || 'sidebar.' + item.label.toLowerCase().replace(' ', '_');
                         return (
                             <Link
                                 key={item.path}
@@ -131,7 +147,7 @@ const Sidebar = ({ darkMode, isOpen, setIsOpen }) => {
                                     <div className="absolute left-0 w-1 h-5 bg-violet-500 rounded-r-full shadow-[0_0_15px_rgba(139,92,246,0.5)]"></div>
                                 )}
                                 <item.icon className={`w-4.5 h-4.5 mr-3 transition-colors ${active ? 'text-violet-500' : 'text-slate-500 group-hover:text-slate-600'}`} strokeWidth={active ? 2.5 : 2} />
-                                <span className={active ? "translate-x-0.5 transition-transform" : ""}>{item.label}</span>
+                                <span className={active ? "translate-x-0.5 transition-transform" : ""}>{t(translationKey, { defaultValue: item.label })}</span>
                                 {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-violet-500/50" />}
                             </Link>
                         );
@@ -145,7 +161,7 @@ const Sidebar = ({ darkMode, isOpen, setIsOpen }) => {
                         className={`flex items-center w-full px-4 py-3.5 transition-all duration-300 rounded-xl font-black text-xs border border-transparent ${darkMode ? 'text-slate-500 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/20' : 'text-slate-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100'}`}
                     >
                         <LogOut className="w-4.5 h-4.5 mr-3" strokeWidth={2.5} />
-                        <span>Sign Out</span>
+                        <span>{t('sidebar.sign_out')}</span>
                     </button>
                 </div>
             </div>

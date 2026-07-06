@@ -5,15 +5,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const minioClient = new Minio.Client({
-    endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-    port: parseInt(process.env.MINIO_PORT || '9000'),
-    useSSL: process.env.MINIO_USE_SSL === 'true',
-    accessKey: process.env.MINIO_ACCESS_KEY || '',
-    secretKey: process.env.MINIO_SECRET_KEY || '',
+    endPoint: process.env.AWS_ENDPOINT || 'localhost',
+    port: parseInt(process.env.AWS_PORT || '9000'),
+    useSSL: process.env.AWS_USE_SSL === 'true',
+    accessKey: process.env.AWS_ACCESS_KEY || '',
+    secretKey: process.env.AWS_SECRET_KEY || '',
 });
 
 export class StorageService {
-    private static bucketName = process.env.MINIO_BUCKET || 'civic-connect-uploads';
+    private static bucketName = process.env.AWS_BUCKET || 'civic-connect-uploads';
 
     static async uploadFile(file: any, folder: string = 'reports'): Promise<string | null> {
         try {
@@ -31,7 +31,7 @@ export class StorageService {
 
             // Construct Presigned URL (Valid for 24 hours)
             const presignedUrl = await minioClient.presignedGetObject(this.bucketName, fileName, 24 * 60 * 60);
-            
+
             return presignedUrl;
         } catch (error) {
             console.error('MinIO Storage Service Error:', error);
@@ -42,7 +42,7 @@ export class StorageService {
     static async getPresignedUrl(urlOrKey: string): Promise<string> {
         try {
             if (!urlOrKey) return '';
-            
+
             // If it's already a presigned URL (contains X-Amz-Signature), return it
             if (urlOrKey.includes('X-Amz-Signature')) return urlOrKey;
 

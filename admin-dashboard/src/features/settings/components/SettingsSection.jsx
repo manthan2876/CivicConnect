@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, AlertTriangle, Trash2, CheckCircle2, Phone, Loader2 } from 'lucide-react';
+import { Lock, AlertTriangle, Trash2, CheckCircle2, Phone, Loader2, Camera, Globe } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
 const SettingsSection = ({
@@ -21,7 +21,13 @@ const SettingsSection = ({
     isVerifying,
     verificationError,
     handleSendPhoneOtp,
-    handleVerifyPhoneOtp
+    handleVerifyPhoneOtp,
+    notifications,
+    setNotifications,
+    uploadingAvatar,
+    handleAvatarChange,
+    regional,
+    setRegional
 }) => {
     const { user } = useAuth();
 
@@ -29,6 +35,35 @@ const SettingsSection = ({
         case 'profile':
             return (
                 <div className="space-y-6">
+                    <div className="flex flex-col items-center gap-4 border-b border-gray-200 dark:border-white/10 pb-6 mb-6">
+                        <div className="relative group">
+                            <div className={`h-24 w-24 flex items-center justify-center text-xl font-bold rounded-3xl border-2 transition-all overflow-hidden ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}>
+                                {user?.avatar_url || user?.user_metadata?.avatar_url ? (
+                                    <img
+                                        src={user.avatar_url || user.user_metadata.avatar_url}
+                                        alt="Avatar"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'A'
+                                )}
+                            </div>
+                            <label className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 rounded-3xl cursor-pointer transition-opacity text-xs font-bold gap-1">
+                                <Camera size={14} />
+                                <span>Change</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleAvatarChange}
+                                    disabled={uploadingAvatar}
+                                    className="hidden"
+                                />
+                            </label>
+                        </div>
+                        {uploadingAvatar && (
+                            <span className="text-xs text-blue-500 font-bold animate-pulse">Uploading profile picture...</span>
+                        )}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-xs font-black uppercase text-gray-500 mb-2">Admin Name</label>
@@ -259,6 +294,84 @@ const SettingsSection = ({
                                 </>
                             )}
                         </button>
+                    </div>
+                </div>
+            );
+        case 'notifications':
+            return (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800/10">
+                        <div>
+                            <h4 className="font-bold text-sm">System Alerts</h4>
+                            <p className="text-xs text-gray-500 mt-1">Get notified on key administrative events, backups, and error limits.</p>
+                        </div>
+                        <input
+                            type="checkbox"
+                            checked={notifications?.systemAlerts ?? true}
+                            onChange={(e) => setNotifications({ ...notifications, systemAlerts: e.target.checked })}
+                            className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500 cursor-pointer"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800/10">
+                        <div>
+                            <h4 className="font-bold text-sm">Email Alerts</h4>
+                            <p className="text-xs text-gray-500 mt-1">Receive daily automated digests of unresolved municipal reports directly to your inbox.</p>
+                        </div>
+                        <input
+                            type="checkbox"
+                            checked={notifications?.emailNotifications ?? true}
+                            onChange={(e) => setNotifications({ ...notifications, emailNotifications: e.target.checked })}
+                            className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500 cursor-pointer"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-800/10">
+                        <div>
+                            <h4 className="font-bold text-sm">Issue Updates</h4>
+                            <p className="text-xs text-gray-500 mt-1">Get notified when issues are escalated or resolution statuses are updated by staff.</p>
+                        </div>
+                        <input
+                            type="checkbox"
+                            checked={notifications?.issueUpdates ?? true}
+                            onChange={(e) => setNotifications({ ...notifications, issueUpdates: e.target.checked })}
+                            className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500 cursor-pointer"
+                        />
+                    </div>
+                </div>
+            );
+        case 'regional':
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <div className="p-6 rounded-2xl bg-violet-500/5 border border-violet-500/10 flex items-start gap-4">
+                        <Globe className="text-violet-500 shrink-0 mt-1" />
+                        <div>
+                            <h4 className="font-bold text-violet-500">Localization Settings</h4>
+                            <p className="text-xs text-violet-400 mt-1">Configure language preference and timezones for your administration portal.</p>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-black uppercase text-gray-500 mb-2">Interface Language</label>
+                            <select
+                                value={regional.language}
+                                onChange={(e) => setRegional({ ...regional, language: e.target.value })}
+                                className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                            >
+                                <option value="en">English (English)</option>
+                                <option value="hi">Hindi (हिन्दी)</option>
+                                <option value="gu">Gujarati (ગુજરાતી)</option>
+                                <option value="mr">Marathi (मराठी)</option>
+                                <option value="ta">Tamil (தமிழ்)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-black uppercase text-gray-500 mb-2">Operational Timezone</label>
+                            <input
+                                type="text"
+                                value={regional.timezone}
+                                onChange={(e) => setRegional({ ...regional, timezone: e.target.value })}
+                                className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                            />
+                        </div>
                     </div>
                 </div>
             );

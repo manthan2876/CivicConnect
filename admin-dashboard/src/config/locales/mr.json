@@ -1,0 +1,48 @@
+{
+  "sidebar": {
+    "dashboard": "डॅशबोर्ड",
+    "issues": "समस्या",
+    "map": "लाइव्ह नकाशा",
+    "leaderboard": "लीडरबोर्ड",
+    "jurisdictions": "अधिकार क्षेत्र",
+    "users": "वापरकर्ते",
+    "analytics": "कार्यकारी एआय",
+    "ai_retraining": "एआय पुनशिक्षण",
+    "departments": "विभाग",
+    "audit_logs": "ऑडिट लॉग",
+    "settings": "सेटिंग्ज",
+    "sign_out": "साइन आउट",
+    "municipal_hub": "महानगरपालिका हब"
+  },
+  "dashboard": {
+    "title": "महानगरपालिका विहंगावलोकन",
+    "subtitle": "नागरी अहवाल, कर्मचारी निराकरण आणि एआय वर्गीकरणाचे रिअल-टाइम सिंक.",
+    "stats": {
+      "total_issues": "एकूण अहवाल",
+      "resolved": "निकाली काढलेले",
+      "pending": "लंबित प्रक्रिया",
+      "under_review": "पुनरावलोकनाधीन"
+    },
+    "charts": {
+      "categories": "समस्या श्रेणी",
+      "trends": "मासिक निराकरण ट्रेंड"
+    },
+    "recent_reports": {
+      "title": "अलीकडील अहवाल",
+      "reporter": "अहवालकर्ता",
+      "category": "श्रेणी",
+      "status": "स्थिती",
+      "reported_at": "अहवाल वेळ",
+      "actions": "कृती",
+      "view": "पहा"
+    }
+  },
+  "settings": {
+    "regional_title": "भौगोलिक आणि भाषा सेटिंग्ज",
+    "regional_desc": "तुमच्या स्थानिक वेळ आणि भाषा निवडी सेट करा.",
+    "language": "इंटरफेस भाषा",
+    "timezone": "ऑपरेशनल वेळ क्षेत्र",
+    "select_language": "भाषा निवडा",
+    "success_save": "प्रशासक कॉन्फिगरेशन अद्यतनित केले!"
+  }
+}

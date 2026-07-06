@@ -28,7 +28,13 @@ const AdminSettings = () => {
         isVerifying,
         verificationError,
         handleSendPhoneOtp,
-        handleVerifyPhoneOtp
+        handleVerifyPhoneOtp,
+        notifications,
+        setNotifications,
+        uploadingAvatar,
+        handleAvatarChange,
+        regional,
+        setRegional
     } = useAdminSettings();
 
     const activeInfo = SETTINGS_SECTIONS.find(s => s.id === activeSection);
@@ -92,6 +98,12 @@ const AdminSettings = () => {
                             verificationError={verificationError}
                             handleSendPhoneOtp={handleSendPhoneOtp}
                             handleVerifyPhoneOtp={handleVerifyPhoneOtp}
+                            notifications={notifications}
+                            setNotifications={setNotifications}
+                            uploadingAvatar={uploadingAvatar}
+                            handleAvatarChange={handleAvatarChange}
+                            regional={regional}
+                            setRegional={setRegional}
                         />
                     </div>
                     {activeSection !== 'danger' && (
