@@ -63,7 +63,7 @@ export const handleWhatsAppWebhook = async (req: Request, res: Response) => {
             description: description,
             priority_score: priorityScore,
             status: 'Pending',
-            minio_pre_key: imageUrl,
+            s3_pre_key: imageUrl,
             fusion_final_category: aiResult.finalCategory,
             fusion_confidence_score: aiResult.fusionScore,
             assigned_department_id: assignedDeptId,

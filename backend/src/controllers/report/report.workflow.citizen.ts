@@ -31,7 +31,7 @@ export const citizenConfirmResolution = async (req: AuthRequest, res: Response):
             await repair.save();
         }
 
-        const baseCredits = GamificationService.calculateCredits(issue.priority_score, !!issue.minio_pre_key, !!issue.minio_audio_key);
+        const baseCredits = GamificationService.calculateCredits(issue.priority_score, !!issue.s3_pre_key, !!issue.s3_audio_key);
         const bonusCredits = 20;
         const totalAwarded = baseCredits + bonusCredits;
 

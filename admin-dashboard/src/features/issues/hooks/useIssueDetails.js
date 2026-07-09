@@ -59,7 +59,7 @@ export const useIssueDetails = (id, onDeleted) => {
     const fetchStaff = async (wardId, deptId) => {
         setLoadingStaff(true);
         try {
-            const data = await usersApi.getAll({ ward_id: wardId, department_id: deptId, role: 'staff' });
+            const data = await usersApi.getStaff({ ward_id: wardId, department_id: deptId });
             setStaffMembers(data);
         } catch (err) {
             console.error('Failed to fetch staff:', err);

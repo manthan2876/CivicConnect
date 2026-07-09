@@ -9,6 +9,7 @@ const qs = (params) => {
 };
 
 export const reportsApi = {
+    getStats: () => api.get('/reports/stats'),
     getGeoJSON: () => api.get('/reports/geojson'),
     getAll: (params) => api.get(`/reports${qs(params)}`),
     getKPIs: (params) => api.get(`/reports/kpi${qs(params)}`),

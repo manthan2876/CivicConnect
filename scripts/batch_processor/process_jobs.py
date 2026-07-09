@@ -7,6 +7,8 @@ import os
 import requests
 import json
 import boto3
+import tempfile
+from gradio_client import Client, handle_file
 from supabase import create_client
 from dotenv import load_dotenv
 
@@ -45,7 +47,8 @@ if not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
     raise Exception("Missing S3/MinIO credentials: set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY "
                     "or AWS_ACCESS_KEY/AWS_SECRET_KEY")
 
-AWS_REGION   = get_env('AWS_REGION',            'ap-south-1')
+AWS_REGION   = get_env('AWS_REGION',            'us-east-1')
+AWS_ENDPOINT = get_env('AWS_ENDPOINT')
 HF_TOKEN     = get_env('HF_TOKEN')
 HF_MODEL_ID  = get_env('HF_MODEL_ID',           'manthan2876/CivicConnect-Classifier')
 GROQ_API_KEY = get_env('OPEN_SOURCE_LLM_KEY',   required=True)
@@ -61,6 +64,8 @@ MAX_RETRIES = 3
 print("Environment loaded.")
 print(f"  Bucket   : {BUCKET}")
 print(f"  Region   : {AWS_REGION}")
+if AWS_ENDPOINT:
+    print(f"  Endpoint : {AWS_ENDPOINT}")
 print(f"  HF Model : {HF_MODEL_ID}")
 print(f"  LLM Model: {LLM_MODEL}")
 
@@ -68,54 +73,95 @@ print(f"  LLM Model: {LLM_MODEL}")
 # 5. Clients
 # ─────────────────────────────────────────────
 supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
-s3 = boto3.client(
-    's3',
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION,
-)
+
+s3_kwargs = {
+    'aws_access_key_id': AWS_ACCESS_KEY_ID,
+    'aws_secret_access_key': AWS_SECRET_ACCESS_KEY,
+    'region_name': AWS_REGION,
+}
+if AWS_ENDPOINT:
+    endpoint_url = AWS_ENDPOINT if AWS_ENDPOINT.startswith('http') else f"https://{AWS_ENDPOINT}"
+    s3_kwargs['endpoint_url'] = endpoint_url
+
+s3 = boto3.client('s3', **s3_kwargs)
+
+def get_clean_s3_key(url_or_key, bucket_name):
+    if not url_or_key:
+        return ''
+    # Strip query parameters
+    clean = url_or_key.split('?')[0]
+    if bucket_name in clean:
+        path_pattern = f"/{bucket_name}/"
+        if path_pattern in clean:
+            parts = clean.split(path_pattern)
+            if len(parts) > 1:
+                return parts[1]
+        bucket_index = clean.find(bucket_name)
+        slash_index = clean.find('/', bucket_index)
+        if slash_index != -1:
+            return clean[slash_index + 1:]
+    return clean
 
 # ─────────────────────────────────────────────
 # 6. HuggingFace image classification
 # ─────────────────────────────────────────────
 def get_gradio_predictions(file_bytes):
-    api_url = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
+    if not HF_MODEL_ID:
+        print("[HF WARNING] HF_MODEL_ID not configured. Skipping image classification.")
+        return []
 
-    last_exc = None
-    for attempt in range(3):
-        try:
-            response = requests.post(api_url, headers=headers, data=file_bytes, timeout=30)
-            response.raise_for_status()
-            res_json = response.json()
+    client = None
+    try:
+        # Connect to Gradio Space client
+        client = Client(HF_MODEL_ID, token=HF_TOKEN if HF_TOKEN else None)
+    except Exception as e:
+        print(f"[HF ERROR] Failed to connect to Gradio client Space {HF_MODEL_ID}: {e}")
+        raise
 
-            # Surface HF-level errors (model loading, not-found, etc.)
-            if isinstance(res_json, dict) and "error" in res_json:
-                raise Exception(f"HF API error: {res_json['error']}")
+    # Write the bytes to a temp file because handle_file expects a file path
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+        temp_file.write(file_bytes)
+        temp_filepath = temp_file.name
 
-            predictions = []
-            if isinstance(res_json, list):
-                predictions = [
-                    {'class': p.get('label'), 'confidence': p.get('score', 0)}
-                    for p in res_json
-                ]
-            elif isinstance(res_json, dict) and 'confidences' in res_json:
+    try:
+        print(f"  Classifying image via Hugging Face Space: {HF_MODEL_ID}...")
+        result = client.predict(
+            image=handle_file(temp_filepath),
+            api_name="/classify"
+        )
+        
+        predictions = []
+        # Support dict format with direct 'confidences'
+        if isinstance(result, dict) and 'confidences' in result:
+            confidences = result['confidences']
+            predictions = [
+                {'class': p.get('label'), 'confidence': p.get('confidence', 0)}
+                for p in confidences
+            ]
+        # Support wrapped dict/list formats
+        elif (isinstance(result, list) or isinstance(result, tuple)) and len(result) > 0:
+            first = result[0]
+            if isinstance(first, dict) and 'confidences' in first:
+                confidences = first['confidences']
                 predictions = [
                     {'class': p.get('label'), 'confidence': p.get('confidence', 0)}
-                    for p in res_json['confidences']
+                    for p in confidences
                 ]
-            return predictions[:3]
+            elif isinstance(first, list):
+                predictions = [
+                    {'class': p.get('label'), 'confidence': p.get('score', 0)}
+                    for p in first
+                ]
 
-        except requests.RequestException as e:
-            last_exc = e
-            if attempt == 2:
-                print(f"[HF ERROR] All retries exhausted: {e}")
-                raise
-        except Exception as e:
-            print(f"[HF ERROR] {e}")
-            raise
+        return predictions[:3]
 
-    return []
+    except Exception as e:
+        print(f"[HF ERROR] Gradio Space prediction failed: {e}")
+        raise
+    finally:
+        # Cleanup temp file
+        if os.path.exists(temp_filepath):
+            os.remove(temp_filepath)
 
 # ─────────────────────────────────────────────
 # 7. Groq LLM text/audio classification
@@ -282,8 +328,9 @@ def process_job(job):
         image_bytes = None
         if job.get('image_s3_key'):
             try:
-                print(f"  Downloading S3 image : {job['image_s3_key']}")
-                obj         = s3.get_object(Bucket=BUCKET, Key=job['image_s3_key'])
+                clean_key = get_clean_s3_key(job['image_s3_key'], BUCKET)
+                print(f"  Downloading S3 image : {clean_key} (from {job['image_s3_key']})")
+                obj         = s3.get_object(Bucket=BUCKET, Key=clean_key)
                 image_bytes = obj['Body'].read()
             except Exception as e:
                 print(f"  [S3 WARNING] Image download failed, continuing without image. Error: {e}")
@@ -292,8 +339,9 @@ def process_job(job):
         audio_bytes = None
         if job.get('audio_s3_key'):
             try:
-                print(f"  Downloading S3 audio : {job['audio_s3_key']}")
-                obj         = s3.get_object(Bucket=BUCKET, Key=job['audio_s3_key'])
+                clean_key = get_clean_s3_key(job['audio_s3_key'], BUCKET)
+                print(f"  Downloading S3 audio : {clean_key} (from {job['audio_s3_key']})")
+                obj         = s3.get_object(Bucket=BUCKET, Key=clean_key)
                 audio_bytes = obj['Body'].read()
             except Exception as e:
                 print(f"  [S3 WARNING] Audio download failed, continuing without audio. Error: {e}")

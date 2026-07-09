@@ -101,20 +101,22 @@ export const updateProfile = async (req: Request, res: Response) => {
 };
 
 export const changePassword = async (req: Request, res: Response) => {
-    console.log(`[DEBUG] changePassword controller reached for user: ${(req as any).user.id}`);
+    console.log(`[DEBUG] changePassword controller reached for user: ${(req as any).user?.id}`);
     try {
         const { currentPassword, newPassword } = req.body;
         const user = (req as any).user;
 
+        if (!currentPassword) {
+            return res.status(400).json({ message: 'currentPassword is required' });
+        }
         if (!newPassword) {
             return res.status(400).json({ message: 'newPassword is required' });
         }
 
-        // 1. Verify current password
-        // Use the email or phone from the authenticated user to verify
+        // 1. Verify current password by re-authenticating
         const identifier = user.email || user.phone;
         if (!identifier) {
-            return res.status(400).json({ message: 'User identifier (email/phone) not found' });
+            return res.status(400).json({ message: 'User identifier (email/phone) not found on token' });
         }
 
         const signInParams: any = { password: currentPassword };
@@ -125,7 +127,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
         if (signInError) {
             console.error('[Auth] Password verification failed:', signInError.message);
-            return res.status(401).json({ message: 'Invalid current password' });
+            return res.status(401).json({ message: 'The current password you entered is incorrect.' });
         }
 
         // 2. Update to new password using Service Role (Admin)
@@ -135,11 +137,26 @@ export const changePassword = async (req: Request, res: Response) => {
         );
 
         if (updateError) {
+            console.error('[Auth] updateUserById failed:', updateError.message);
             return res.status(400).json({ message: updateError.message });
+        }
+
+        // 3. Clear temp password from PostgreSQL now that the user has set their own
+        try {
+            const dbUser = await User.findByPk(user.id);
+            if (dbUser && dbUser.temp_password_cleartext) {
+                dbUser.temp_password_cleartext = null;
+                await dbUser.save();
+                console.log(`[Auth] Cleared temp_password_cleartext for user ${user.id}`);
+            }
+        } catch (clearErr: any) {
+            // Non-fatal: log but don't fail the response
+            console.error('[Auth] Failed to clear temp password:', clearErr.message);
         }
 
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error: any) {
+        console.error('[Auth] changePassword crash:', error.message);
         res.status(500).json({ message: error.message });
     }
 };

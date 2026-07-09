@@ -38,7 +38,7 @@ export const proposeResolution = async (req: AuthRequest, res: Response): Promis
         await Repair.create({
             issue_id: issue.id,
             worker_id: user.id,
-            minio_post_key: imageUrl,
+            s3_post_key: imageUrl,
         });
 
         issue.status = 'Pending Confirmation';

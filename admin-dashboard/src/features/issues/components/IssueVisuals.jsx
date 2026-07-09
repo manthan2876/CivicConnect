@@ -20,7 +20,7 @@ const IssueVisuals = ({ report, darkMode }) => {
                 </div>
                 <div className={`p-1 min-h-[300px] flex items-center justify-center rounded-xl ${darkMode ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
                     <img
-                        src={report.minio_pre_key || (report.minio_image_urls && report.minio_image_urls[0]) || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop'}
+                        src={report.s3_pre_key || report.minio_pre_key || (report.s3_image_urls && report.s3_image_urls[0]) || (report.minio_image_urls && report.minio_image_urls[0]) || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop'}
                         alt="Report Evidence"
                         className="w-full aspect-video object-cover rounded-xl shadow-inner"
                         onError={(e) => {

@@ -9,8 +9,9 @@ export const confirmResolution = async (req: AuthRequest, res: Response): Promis
         const { id } = req.params;
         const userAuth = (req as any).user;
 
-        if (!userAuth || !['authority', 'admin', 'super_admin'].includes(userAuth.role)) {
-            return res.status(403).json({ error: 'Access denied. Only authorities can approve resolutions.' });
+        const permissions: string[] = userAuth?.permissions || [];
+        if (!userAuth || !permissions.includes('report:confirm_resolution')) {
+            return res.status(403).json({ error: 'Access denied. Insufficient permissions to approve resolutions.' });
         }
 
         const issue = await Issue.findByPk(id as string);
@@ -54,8 +55,9 @@ export const rejectResolution = async (req: AuthRequest, res: Response): Promise
         const { reason } = req.body;
         const userAuth = (req as any).user;
 
-        if (!userAuth || !['authority', 'admin', 'super_admin'].includes(userAuth.role)) {
-            return res.status(403).json({ error: 'Access denied. Only authorities can reject resolutions.' });
+        const permissions: string[] = userAuth?.permissions || [];
+        if (!userAuth || !permissions.includes('report:reject_resolution')) {
+            return res.status(403).json({ error: 'Access denied. Insufficient permissions to reject resolutions.' });
         }
 
         const issue = await Issue.findByPk(id as string);

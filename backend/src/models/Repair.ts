@@ -5,7 +5,7 @@ export class Repair extends Model {
     declare id: string;
     declare issue_id: string;
     declare worker_id: string;
-    declare minio_post_key: string;
+    declare s3_post_key: string;
     declare siamese_verified: boolean;
     declare closed_at: Date;
 }
@@ -32,7 +32,7 @@ Repair.init({
             key: 'id',
         },
     },
-    minio_post_key: {
+    s3_post_key: {
         type: DataTypes.TEXT,
         allowNull: true,
     },

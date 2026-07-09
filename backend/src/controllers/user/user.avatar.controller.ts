@@ -22,12 +22,20 @@ export const updateUserAvatar = async (req: AuthRequest, res: Response): Promise
         }
 
         // Extract clean S3 key from the presigned URL to store in Postgres
-        let s3Key = presignedUrl;
+        let s3Key = presignedUrl.split('?')[0] || '';
         const bucketName = StorageService.getBucketName();
-        if (presignedUrl.includes(bucketName)) {
-            const parts = presignedUrl.split(`${bucketName}/`);
-            if (parts.length > 1 && parts[1]) {
-                s3Key = parts[1].split('?')[0] || '';
+        if (s3Key.includes(bucketName)) {
+            if (s3Key.includes(`/${bucketName}/`)) {
+                const parts = s3Key.split(`/${bucketName}/`);
+                if (parts.length > 1 && parts[1]) {
+                    s3Key = parts[1];
+                }
+            } else {
+                const bucketIndex = s3Key.indexOf(bucketName);
+                const firstSlashAfterBucket = s3Key.indexOf('/', bucketIndex);
+                if (firstSlashAfterBucket !== -1) {
+                    s3Key = s3Key.substring(firstSlashAfterBucket + 1);
+                }
             }
         }
 

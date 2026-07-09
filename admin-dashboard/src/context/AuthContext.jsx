@@ -22,6 +22,8 @@ export const AuthProvider = ({ children }) => {
         // 1. Initial Session Check
         supabase.auth.getSession().then(({ data, error }) => {
             if (error) {
+                console.error("Session verification error:", error.message);
+                supabase.auth.signOut().catch(() => {});
                 setInitialLoading(false);
                 return;
             }
@@ -33,6 +35,8 @@ export const AuthProvider = ({ children }) => {
                         setUser({
                             ...session.user,
                             ...profile,
+                            name: profile?.name || session.user?.user_metadata?.name || '',
+                            avatar_url: profile?.avatar_url || session.user?.user_metadata?.avatar_url || '',
                             role: determineRole(session.user, profile),
                             token: session.access_token
                         });
@@ -41,6 +45,8 @@ export const AuthProvider = ({ children }) => {
                     .catch(err => {
                         setUser({
                             ...session.user,
+                            name: session.user?.user_metadata?.name || '',
+                            avatar_url: session.user?.user_metadata?.avatar_url || '',
                             role: determineRole(session.user, null),
                             token: session.access_token
                         });
@@ -51,6 +57,7 @@ export const AuthProvider = ({ children }) => {
             }
         }).catch(err => {
             console.error("Fatal getSession error:", err);
+            supabase.auth.signOut().catch(() => {});
             setInitialLoading(false);
         });
 
@@ -63,6 +70,8 @@ export const AuthProvider = ({ children }) => {
                         setUser({
                             ...session.user,
                             ...profile,
+                            name: profile?.name || session.user?.user_metadata?.name || '',
+                            avatar_url: profile?.avatar_url || session.user?.user_metadata?.avatar_url || '',
                             role: determineRole(session.user, profile),
                             token: session.access_token
                         });
@@ -71,6 +80,8 @@ export const AuthProvider = ({ children }) => {
                     .catch(err => {
                         setUser({
                             ...session.user,
+                            name: session.user?.user_metadata?.name || '',
+                            avatar_url: session.user?.user_metadata?.avatar_url || '',
                             role: determineRole(session.user, null),
                             token: session.access_token
                         });

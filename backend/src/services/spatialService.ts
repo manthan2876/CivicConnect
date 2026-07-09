@@ -71,10 +71,10 @@ export class SpatialService {
         }
 
         // 2. Append Evidence
-        const currentImages = issue.get('minio_image_urls') || [];
+        const currentImages = issue.get('s3_image_urls') || [];
         if (imageUrl) currentImages.push(imageUrl);
 
-        const currentAudios = issue.get('minio_audio_urls') || [];
+        const currentAudios = issue.get('s3_audio_urls') || [];
         if (audioUrl) currentAudios.push(audioUrl);
 
         // 3. Boost Priority (Deduplication bonus)
@@ -84,8 +84,8 @@ export class SpatialService {
 
         return await issue.update({
             reporter_ids: currentReporters,
-            minio_image_urls: currentImages,
-            minio_audio_urls: currentAudios,
+            s3_image_urls: currentImages,
+            s3_audio_urls: currentAudios,
             priority_score: newScore
         });
     }

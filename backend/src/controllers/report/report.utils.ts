@@ -20,11 +20,19 @@ export function obfuscateLocation(lon: number, lat: number) {
 
 export function getS3KeyFromUrl(url: string, bucketName: string): string {
     if (!url) return '';
-    if (url.includes(bucketName)) {
-        const parts = url.split(`${bucketName}/`);
-        if (parts.length > 1 && parts[1]) {
-            return parts[1].split('?')[0] || '';
+    const cleanUrl = url.split('?')[0] || '';
+    if (cleanUrl.includes(bucketName)) {
+        if (cleanUrl.includes(`/${bucketName}/`)) {
+            const parts = cleanUrl.split(`/${bucketName}/`);
+            if (parts.length > 1 && parts[1]) {
+                return parts[1];
+            }
+        }
+        const bucketIndex = cleanUrl.indexOf(bucketName);
+        const firstSlashAfterBucket = cleanUrl.indexOf('/', bucketIndex);
+        if (firstSlashAfterBucket !== -1) {
+            return cleanUrl.substring(firstSlashAfterBucket + 1);
         }
     }
-    return url.split('?')[0] || '';
+    return cleanUrl;
 }

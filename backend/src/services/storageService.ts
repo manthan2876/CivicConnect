@@ -1,16 +1,28 @@
-import * as Minio from 'minio';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const minioClient = new Minio.Client({
-    endPoint: process.env.AWS_ENDPOINT || 'localhost',
-    port: parseInt(process.env.AWS_PORT || '9000'),
-    useSSL: process.env.AWS_USE_SSL === 'true',
-    accessKey: process.env.AWS_ACCESS_KEY || '',
-    secretKey: process.env.AWS_SECRET_KEY || '',
-});
+const endpoint = process.env.AWS_ENDPOINT || 's3.amazonaws.com';
+const isS3Standard = endpoint === 's3.amazonaws.com' || endpoint === 's3.us-east-1.amazonaws.com';
+
+const clientConfig: any = {
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY || '',
+        secretAccessKey: process.env.AWS_SECRET_KEY || '',
+    },
+};
+
+if (!isS3Standard) {
+    clientConfig.endpoint = endpoint.startsWith('http') ? endpoint : `https://${endpoint}`;
+    clientConfig.forcePathStyle = true;
+}
+
+clientConfig.region = process.env.AWS_REGION || 'us-east-1';
+
+const s3Client = new S3Client(clientConfig);
 
 export class StorageService {
     private static bucketName = process.env.AWS_BUCKET || 'civic-connect-uploads';
@@ -20,55 +32,80 @@ export class StorageService {
             const fileExt = file.originalname.split('.').pop();
             const fileName = `${folder}/${uuidv4()}.${fileExt}`;
 
-            // Upload to MinIO
-            await minioClient.putObject(
-                this.bucketName,
-                fileName,
-                file.buffer,
-                file.size,
-                { 'Content-Type': file.mimetype }
-            );
+            // Upload to S3
+            const command = new PutObjectCommand({
+                Bucket: this.bucketName,
+                Key: fileName,
+                Body: file.buffer,
+                ContentType: file.mimetype,
+            });
+
+            await s3Client.send(command);
 
             // Construct Presigned URL (Valid for 24 hours)
-            const presignedUrl = await minioClient.presignedGetObject(this.bucketName, fileName, 24 * 60 * 60);
+            const presignedUrl = await this.getPresignedUrl(fileName, 24 * 60 * 60);
 
             return presignedUrl;
         } catch (error) {
-            console.error('MinIO Storage Service Error:', error);
+            console.error('S3 Storage Service Upload Error:', error);
             return null;
         }
     }
 
-    static async getPresignedUrl(urlOrKey: string): Promise<string> {
+    static async getPresignedUrl(urlOrKey: string, expiresInSeconds: number = 60 * 60): Promise<string> {
         try {
             if (!urlOrKey) return '';
 
-            // If it's already a presigned URL (contains X-Amz-Signature), return it
-            if (urlOrKey.includes('X-Amz-Signature')) return urlOrKey;
-
-            // Extract the key from the full URL if necessary
-            let objectKey = urlOrKey;
-            if (urlOrKey.includes(this.bucketName)) {
-                const parts = urlOrKey.split(`${this.bucketName}/`);
-                if (parts.length > 1 && parts[1]) {
-                    objectKey = parts[1];
+            // If it's an external HTTP/HTTPS URL, return it as-is
+            if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
+                if (!urlOrKey.includes(this.bucketName)) {
+                    return urlOrKey;
                 }
             }
 
+            // If it's already a presigned URL (contains X-Amz-Signature or similar), return it
+            if (urlOrKey.includes('X-Amz-Signature') || urlOrKey.includes('X-Amz-Algorithm')) return urlOrKey;
+
+            // Extract the key from the full URL if necessary
+            let objectKey: string = urlOrKey.split('?')[0] || '';
+            if (objectKey.includes(this.bucketName)) {
+                if (objectKey.includes(`/${this.bucketName}/`)) {
+                    const parts = objectKey.split(`/${this.bucketName}/`);
+                    if (parts.length > 1 && parts[1]) {
+                        objectKey = parts[1];
+                    }
+                } else {
+                    const bucketIndex = objectKey.indexOf(this.bucketName);
+                    const firstSlashAfterBucket = objectKey.indexOf('/', bucketIndex);
+                    if (firstSlashAfterBucket !== -1) {
+                        objectKey = objectKey.substring(firstSlashAfterBucket + 1);
+                    }
+                }
+            }
+
+            const command = new GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: objectKey,
+            });
+
             // Generate a fresh presigned URL valid for 1 hour
-            return await minioClient.presignedGetObject(this.bucketName, objectKey, 60 * 60);
+            return await getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds });
         } catch (error) {
-            console.error('Error generating presigned URL:', error);
+            console.error('S3 Storage Service Presigned GET URL Error:', error);
             return urlOrKey; // Fallback to original
         }
     }
 
     static async deleteFile(path: string): Promise<boolean> {
         try {
-            await minioClient.removeObject(this.bucketName, path);
+            const command = new DeleteObjectCommand({
+                Bucket: this.bucketName,
+                Key: path,
+            });
+            await s3Client.send(command);
             return true;
         } catch (error) {
-            console.error('MinIO Storage Service Delete Error:', error);
+            console.error('S3 Storage Service Delete Error:', error);
             return false;
         }
     }
@@ -79,9 +116,13 @@ export class StorageService {
 
     static async getPresignedPutUrl(fileName: string): Promise<string> {
         try {
-            return await minioClient.presignedPutObject(this.bucketName, fileName, 60 * 60);
+            const command = new PutObjectCommand({
+                Bucket: this.bucketName,
+                Key: fileName,
+            });
+            return await getSignedUrl(s3Client, command, { expiresIn: 60 * 60 });
         } catch (error) {
-            console.error('MinIO Storage Service Presigned PUT URL Error:', error);
+            console.error('S3 Storage Service Presigned PUT URL Error:', error);
             throw error;
         }
     }

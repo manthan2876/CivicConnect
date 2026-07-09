@@ -15,8 +15,8 @@ export const startSpatialDeduplicator = () => {
                         id, 
                         category, 
                         reporter_ids,
-                        minio_image_urls,
-                        minio_audio_urls,
+                        s3_image_urls,
+                        s3_audio_urls,
                         priority_score,
                         ST_ClusterDBSCAN(location::geometry, eps := 0.0005, minpoints := 2) OVER(PARTITION BY category) as cluster_id
                     FROM issues
@@ -56,22 +56,22 @@ export const startSpatialDeduplicator = () => {
                 console.log(`[CRON] Merging cluster ${group.cluster_id} (${group.category}). Primary: ${primaryIssue.id}, Merging: ${duplicates.length} issues.`);
 
                 const mergedReporters = new Set<string>(primaryIssue.reporter_ids || []);
-                const mergedImages = new Set<string>(primaryIssue.minio_image_urls || []);
-                const mergedAudio = new Set<string>(primaryIssue.minio_audio_urls || []);
+                const mergedImages = new Set<string>(primaryIssue.s3_image_urls || []);
+                const mergedAudio = new Set<string>(primaryIssue.s3_audio_urls || []);
                 
                 let addedPriority = 0;
 
                 for (const dup of duplicates) {
                     if (dup.reporter_ids) dup.reporter_ids.forEach(r => mergedReporters.add(r));
-                    if (dup.minio_image_urls) dup.minio_image_urls.forEach(i => mergedImages.add(i));
-                    if (dup.minio_audio_urls) dup.minio_audio_urls.forEach(a => mergedAudio.add(a));
+                    if (dup.s3_image_urls) dup.s3_image_urls.forEach(i => mergedImages.add(i));
+                    if (dup.s3_audio_urls) dup.s3_audio_urls.forEach(a => mergedAudio.add(a));
                     addedPriority += 10; // Boost priority for each duplicate merged
                 }
 
                 // Update primary
                 primaryIssue.reporter_ids = Array.from(mergedReporters);
-                primaryIssue.minio_image_urls = Array.from(mergedImages);
-                primaryIssue.minio_audio_urls = Array.from(mergedAudio);
+                primaryIssue.s3_image_urls = Array.from(mergedImages);
+                primaryIssue.s3_audio_urls = Array.from(mergedAudio);
                 primaryIssue.priority_score = (primaryIssue.priority_score || 0) + addedPriority;
                 
                 await primaryIssue.save();

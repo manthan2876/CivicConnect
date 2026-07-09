@@ -74,6 +74,7 @@ export const useAdminSettings = () => {
             
             updateUser({
                 ...user,
+                avatar_url: data.avatar_url,
                 userMetadata: {
                     ...(user?.userMetadata || {}),
                     avatar_url: data.avatar_url
@@ -115,10 +116,21 @@ export const useAdminSettings = () => {
         setSaving(true);
         try {
             if (activeSection === 'profile') {
-                const updatedUserData = await usersApi.updateProfile(user.id, {
-                    name: profile.name
+                const { error } = await supabase.auth.updateUser({
+                    data: {
+                        ...(user?.user_metadata || {}),
+                        name: profile.name
+                    }
                 });
-                updateUser(updatedUserData);
+                if (error) throw error;
+                updateUser({
+                    ...user,
+                    name: profile.name,
+                    user_metadata: {
+                        ...(user?.user_metadata || {}),
+                        name: profile.name
+                    }
+                });
             } else if (activeSection === 'security' && security.newPassword) {
                 if (security.newPassword !== security.confirmPassword) {
                     alert("Passwords do not match!");

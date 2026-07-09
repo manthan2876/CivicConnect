@@ -267,8 +267,12 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     final coords = _report!['location']?['coordinates'] ?? [0, 0];
     
     String imageUrl = 'https://via.placeholder.com/400x300';
-    if (_report!['minio_image_urls'] != null && (_report!['minio_image_urls'] as List).isNotEmpty) {
+    if (_report!['s3_image_urls'] != null && (_report!['s3_image_urls'] as List).isNotEmpty) {
+      imageUrl = _report!['s3_image_urls'][0];
+    } else if (_report!['minio_image_urls'] != null && (_report!['minio_image_urls'] as List).isNotEmpty) {
       imageUrl = _report!['minio_image_urls'][0];
+    } else if (_report!['s3_pre_key'] != null) {
+      imageUrl = _report!['s3_pre_key'];
     } else if (_report!['minio_pre_key'] != null) {
       imageUrl = _report!['minio_pre_key'];
     }

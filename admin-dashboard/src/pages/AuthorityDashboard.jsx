@@ -15,8 +15,11 @@ const AuthorityDashboard = () => {
 
     useEffect(() => {
         const params = {};
-        if (user?.departmentId) {
-            params.department_id = user.departmentId;
+        if (user?.ward_id) {
+            params.ward_id = user.ward_id;
+        }
+        if (user?.department_id) {
+            params.department_id = user.department_id;
         }
 
         Promise.all([
@@ -32,7 +35,7 @@ const AuthorityDashboard = () => {
                 console.error('Error fetching authority data:', err);
                 setLoading(false);
             });
-    }, [user?.departmentId]);
+    }, [user?.id, user?.ward_id, user?.department_id]);
 
 
     const stats = kpis ? [

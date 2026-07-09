@@ -6,7 +6,7 @@ import { Permission } from '../models/Permission.js';
 const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     viewer: ['report:view_my', 'report:view_area'],
     citizen: ['report:create', 'report:view_my', 'report:view_area', 'report:upvote', 'report:confirm_resolution', 'report:reject_resolution'],
-    field_officer: ['report:create', 'report:view_my', 'report:view_area', 'report:view_all', 'report:upvote', 'report:update_status', 'report:propose_resolution'],
+    field_officer: ['report:create', 'report:view_my', 'report:view_area', 'report:view_all', 'report:upvote', 'report:assign', 'report:update_status', 'report:propose_resolution', 'report:confirm_resolution', 'report:reject_resolution'],
     hq_staff: ['report:create', 'report:view_my', 'report:view_area', 'report:view_all', 'report:upvote', 'report:assign', 'report:update_status', 'report:propose_resolution', 'report:bulk_update', 'ai:manage'],
     dept_head: ['report:create', 'report:view_my', 'report:view_area', 'report:view_all', 'report:upvote', 'report:assign', 'report:update_status', 'report:propose_resolution', 'report:confirm_resolution', 'report:reject_resolution', 'report:bulk_update', 'analytics:query'],
     admin: ['report:create', 'report:view_my', 'report:view_area', 'report:view_all', 'report:upvote', 'report:assign', 'report:update_status', 'report:propose_resolution', 'report:confirm_resolution', 'report:reject_resolution', 'report:bulk_update', 'report:delete', 'analytics:query', 'ai:manage', 'users:manage', 'audit:view'],
@@ -73,6 +73,11 @@ async function runMigrations(): Promise<void> {
               "createdAt"       TIMESTAMPTZ DEFAULT NOW(),
               "updatedAt"       TIMESTAMPTZ DEFAULT NOW()
             );
+            ALTER TABLE "issues" ADD COLUMN IF NOT EXISTS "s3_pre_key" TEXT;
+            ALTER TABLE "issues" ADD COLUMN IF NOT EXISTS "s3_audio_key" TEXT;
+            ALTER TABLE "issues" ADD COLUMN IF NOT EXISTS "s3_image_urls" TEXT[] DEFAULT '{}';
+            ALTER TABLE "issues" ADD COLUMN IF NOT EXISTS "s3_audio_urls" TEXT[] DEFAULT '{}';
+            ALTER TABLE "repairs" ADD COLUMN IF NOT EXISTS "s3_post_key" TEXT;
         `);
         console.log('Targeted migrations executed successfully');
     } catch (err: any) {

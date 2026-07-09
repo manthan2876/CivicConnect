@@ -55,12 +55,21 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<any> 
             return res.status(400).json({ error: 'Name, email, and role are required.' });
         }
 
-        // Generate temporary password
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$';
+        // Generate temporary password complying with strict complexity rules (at least 1 upper, 1 lower, 1 digit, 1 special)
+        const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const lowers = 'abcdefghijklmnopqrstuvwxyz';
+        const digits = '0123456789';
+        const specials = '!@#$%^&*()_+-=[]{}|;:,.<>?';
         let generatedPassword = '';
-        for (let i = 0; i < 12; i++) {
-            generatedPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+        generatedPassword += uppers.charAt(Math.floor(Math.random() * uppers.length));
+        generatedPassword += lowers.charAt(Math.floor(Math.random() * lowers.length));
+        generatedPassword += digits.charAt(Math.floor(Math.random() * digits.length));
+        generatedPassword += specials.charAt(Math.floor(Math.random() * specials.length));
+        const allChars = uppers + lowers + digits + specials;
+        for (let i = 4; i < 12; i++) {
+            generatedPassword += allChars.charAt(Math.floor(Math.random() * allChars.length));
         }
+        generatedPassword = generatedPassword.split('').sort(() => 0.5 - Math.random()).join('');
 
         console.log(`[UserController] Creating Supabase Auth account for: ${email}`);
         const { data: { user: supabaseUser }, error } = await supabaseAdmin.auth.admin.createUser({
@@ -81,32 +90,42 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<any> 
 
         console.log(`[UserController] Supabase Auth account created (ID: ${supabaseUser.id}). Syncing to PG...`);
         
-        // Sync to Postgres users table
-        const newUser = await User.create({
-            id: supabaseUser.id,
-            email,
-            phone: phone || null,
-            role,
-            designation: designation || null,
-            department_id: department_id || null,
-            ward_id: ward_id || null,
-            ulb_id: ulb_id || null,
-            temp_password_cleartext: generatedPassword,
-            green_credits: 100,
-            is_active: true
-        });
-
-        // Link Role in user_roles
-        let mappedRole = role.toLowerCase();
-        if (mappedRole === 'staff') mappedRole = 'field_officer';
-        else if (mappedRole === 'authority') mappedRole = 'dept_head';
-
-        const dbRole = await Role.findOne({ where: { name: mappedRole } });
-        if (dbRole) {
-            await UserRole.create({
-                user_id: supabaseUser.id,
-                role_id: dbRole.id
+        let newUser;
+        try {
+            // Sync to Postgres users table
+            newUser = await User.create({
+                id: supabaseUser.id,
+                email,
+                phone: phone || null,
+                role,
+                designation: designation || null,
+                department_id: department_id || null,
+                ward_id: ward_id || null,
+                ulb_id: ulb_id || null,
+                temp_password_cleartext: generatedPassword,
+                green_credits: 100,
+                is_active: true
             });
+
+            // Link Role in user_roles
+            let mappedRole = role.toLowerCase();
+            if (mappedRole === 'staff') mappedRole = 'field_officer';
+            else if (mappedRole === 'authority') mappedRole = 'dept_head';
+
+            const dbRole = await Role.findOne({ where: { name: mappedRole } });
+            if (dbRole) {
+                await UserRole.create({
+                    user_id: supabaseUser.id,
+                    role_id: dbRole.id
+                });
+            }
+        } catch (dbErr: any) {
+            console.error('[UserController] PostgreSQL Sync failed, rolling back Supabase user:', dbErr.message);
+            // Rollback Supabase user creation to keep auth & DB state consistent
+            await supabaseAdmin.auth.admin.deleteUser(supabaseUser.id).catch(rollErr => {
+                console.error('[UserController] Failed to rollback Supabase user:', rollErr.message);
+            });
+            throw dbErr;
         }
 
         // Log Audit Event
@@ -123,6 +142,14 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<any> 
             temp_password_cleartext: generatedPassword
         });
     } catch (error: any) {
+        console.error('[UserController] createUser Failed:', error);
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            const fields = error.errors.map((e: any) => e.path).join(', ');
+            return res.status(409).json({ error: `A user with this ${fields} already exists.` });
+        }
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 };
@@ -140,12 +167,21 @@ export const resetUserPassword = async (req: AuthRequest, res: Response): Promis
             return res.status(403).json({ error: 'Forbidden: Cannot reset password for users in another city.' });
         }
 
-        // Generate new password
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$';
+        // Generate new password complying with strict complexity rules (at least 1 upper, 1 lower, 1 digit, 1 special)
+        const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const lowers = 'abcdefghijklmnopqrstuvwxyz';
+        const digits = '0123456789';
+        const specials = '!@#$%^&*()_+-=[]{}|;:,.<>?';
         let generatedPassword = '';
-        for (let i = 0; i < 12; i++) {
-            generatedPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+        generatedPassword += uppers.charAt(Math.floor(Math.random() * uppers.length));
+        generatedPassword += lowers.charAt(Math.floor(Math.random() * lowers.length));
+        generatedPassword += digits.charAt(Math.floor(Math.random() * digits.length));
+        generatedPassword += specials.charAt(Math.floor(Math.random() * specials.length));
+        const allChars = uppers + lowers + digits + specials;
+        for (let i = 4; i < 12; i++) {
+            generatedPassword += allChars.charAt(Math.floor(Math.random() * allChars.length));
         }
+        generatedPassword = generatedPassword.split('').sort(() => 0.5 - Math.random()).join('');
 
         console.log(`[UserController] Resetting password in Supabase for user ${id}`);
         const { error } = await supabaseAdmin.auth.admin.updateUserById(id as string, {

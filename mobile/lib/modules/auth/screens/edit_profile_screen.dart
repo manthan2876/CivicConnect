@@ -24,6 +24,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _pickedImageName;
   final ImagePicker _picker = ImagePicker();
 
+  Map<String, dynamic>? _profile;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +33,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController = TextEditingController(text: user?.userMetadata?['full_name'] ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
     _phoneController = TextEditingController(text: user?.phone ?? '');
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await _userService.getProfile();
+    if (mounted && profile != null) {
+      setState(() {
+        _profile = profile;
+        if (profile['name'] != null && profile['name'].toString().isNotEmpty) {
+          _nameController.text = profile['name'];
+        }
+      });
+    }
   }
 
   @override
@@ -245,10 +260,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                       fit: BoxFit.cover,
                                     ),
                                   )
-                                : user?.userMetadata?['avatar_url'] != null
+                                : _profile?['avatar_url'] != null
                                     ? ClipOval(
                                         child: Image.network(
-                                          user!.userMetadata!['avatar_url']!,
+                                          _profile!['avatar_url']!,
                                           width: 120,
                                           height: 120,
                                           fit: BoxFit.cover,

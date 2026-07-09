@@ -27,6 +27,20 @@ async function performFetch(url, options) {
     }
 }
 
+async function handleResponse(response) {
+    if (!response.ok) {
+        let errMsg = response.statusText;
+        try {
+            const data = await response.json();
+            if (data && (data.message || data.error)) {
+                errMsg = data.message || data.error;
+            }
+        } catch (_) {}
+        throw new Error(errMsg);
+    }
+    return response.json();
+}
+
 export const api = {
     getBaseUrl() {
         return PRIMARY_API_URL;
@@ -39,8 +53,7 @@ export const api = {
         };
 
         const response = await performFetch(`${PRIMARY_API_URL}${endpoint}`, { headers });
-        if (!response.ok) throw new Error(response.statusText);
-        return response.json();
+        return handleResponse(response);
     },
 
     async post(endpoint, body) {
@@ -58,10 +71,8 @@ export const api = {
             headers,
             body: isFormData ? body : JSON.stringify(body)
         });
-        if (!response.ok) throw new Error(response.statusText);
-        return response.json();
+        return handleResponse(response);
     },
-
 
     async patch(endpoint, body) {
         const { data: { session } } = await supabase.auth.getSession();
@@ -75,8 +86,7 @@ export const api = {
             headers,
             body: JSON.stringify(body)
         });
-        if (!response.ok) throw new Error(response.statusText);
-        return response.json();
+        return handleResponse(response);
     },
 
     async delete(endpoint) {
@@ -90,7 +100,6 @@ export const api = {
             method: 'DELETE',
             headers
         });
-        if (!response.ok) throw new Error(response.statusText);
-        return response.json();
+        return handleResponse(response);
     }
 };

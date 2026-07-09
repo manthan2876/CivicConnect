@@ -31,7 +31,7 @@ export const updateReport = async (req: AuthRequest, res: Response) => {
                     issue_id: issue.id,
                     original_category: issue.category,
                     corrected_category: category,
-                    media_url: (issue.minio_image_urls && issue.minio_image_urls.length > 0) ? issue.minio_image_urls[0] : (issue.minio_pre_key || null)
+                    media_url: (issue.s3_image_urls && issue.s3_image_urls.length > 0) ? issue.s3_image_urls[0] : (issue.s3_pre_key || null)
                 });
                 console.log(`[AI FEEDBACK] Issue ${issue.id} corrected from ${issue.category} to ${category}`);
             } catch (err) {
@@ -124,11 +124,11 @@ export const deleteReport = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Issue not found' });
         }
 
-        // 2. Perform MinIO Storage Cleanup
+        // 2. Perform S3 Storage Cleanup
         const bucketName = StorageService.getBucketName();
         const mediaUrls = [
-            ...(issue.minio_image_urls || []),
-            ...(issue.minio_audio_urls || [])
+            ...(issue.s3_image_urls || []),
+            ...(issue.s3_audio_urls || [])
         ];
 
         console.log(`[CLEANUP] Initiating storage purge for Issue ${issueId}. Found ${mediaUrls.length} media items.`);
@@ -139,11 +139,11 @@ export const deleteReport = async (req: AuthRequest, res: Response) => {
                 const urlParts = url.split(`${bucketName}/`);
                 if (urlParts.length > 1) {
                     const objectKey = urlParts[1] as string;
-                    console.log(`[CLEANUP] Purging MinIO object: ${objectKey}`);
+                    console.log(`[CLEANUP] Purging S3 object: ${objectKey}`);
                     await StorageService.deleteFile(objectKey);
                 }
             } catch (storageErr) {
-                console.error(`[CLEANUP] Non-fatal: Failed to delete media [${url}] from MinIO:`, storageErr);
+                console.error(`[CLEANUP] Non-fatal: Failed to delete media [${url}] from S3:`, storageErr);
             }
         }
 

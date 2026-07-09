@@ -23,7 +23,7 @@ const IssueAuditComparison = ({ report, repairData, darkMode }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1">
                     <div className="relative group">
                         <img
-                            src={report.minio_pre_key || (report.minio_image_urls && report.minio_image_urls[0]) || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop'}
+                            src={report.s3_pre_key || report.minio_pre_key || (report.s3_image_urls && report.s3_image_urls[0]) || (report.minio_image_urls && report.minio_image_urls[0]) || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop'}
                             alt="Before"
                             className="w-full aspect-video object-cover rounded-l-xl"
                             onError={(e) => {

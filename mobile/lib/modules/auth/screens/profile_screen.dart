@@ -28,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _otpController = TextEditingController();
   bool _otpSent = false;
   bool _isVerifying = false;
+  Map<String, dynamic>? _profile;
   Map<String, dynamic>? _stats;
 
   @override
@@ -102,9 +103,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadStats() async {
     final stats = await _userService.getUserStats();
+    final profile = await _userService.getProfile();
     if (mounted) {
       setState(() {
         _stats = stats;
+        _profile = profile;
       });
     }
   }
@@ -151,8 +154,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: CircleAvatar(
                         radius: 55,
                         backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                        child: user?.userMetadata?['avatar_url'] != null 
-                          ? ClipOval(child: Image.network(user!.userMetadata!['avatar_url']!, width: 110, height: 110, fit: BoxFit.cover))
+                        child: _profile?['avatar_url'] != null 
+                          ? ClipOval(child: Image.network(_profile!['avatar_url']!, width: 110, height: 110, fit: BoxFit.cover))
                           : Icon(Icons.person, size: 65, color: theme.colorScheme.primary),
 
                       ),
@@ -183,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                user?.userMetadata?['full_name'] ?? ((user?.phone != null && user!.phone!.isNotEmpty) ? 'Citizen User' : 'Viewer User'),
+                _profile?['name'] ?? user?.userMetadata?['full_name'] ?? ((user?.phone != null && user!.phone!.isNotEmpty) ? 'Citizen User' : 'Viewer User'),
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               Text(

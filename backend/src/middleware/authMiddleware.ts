@@ -26,7 +26,8 @@ export const verifySupabaseToken = async (req: Request, res: Response, next: Nex
             role: userRoleName,
             permissions: attachedPermissions,
             department_id: dbUser?.department_id,
-            ward_id: dbUser?.ward_id
+            ward_id: dbUser?.ward_id,
+            ulb_id: dbUser?.ulb_id
         };
         
         (req as any).userIdentifier = user.phone || user.email || user.id;

@@ -38,8 +38,8 @@ export const runArchivalProcess = async () => {
                 issue.reporter_id = '00000000-0000-0000-0000-000000000000'; // System Anonymized ID
                 issue.reporter_ids = []; 
                 
-                // 3. Media Archival (Logic for MinIO)
-                // In a production MinIO setup, we'd use 'mc ilm' rules.
+                // 3. Media Archival (Logic for AWS S3)
+                // In a production S3 setup, we'd use S3 Lifecycle Configuration rules.
                 // Here we'll simulate by updating metadata or moving to an archive prefix.
                 
                 await issue.save();
@@ -62,11 +62,10 @@ export const runArchivalProcess = async () => {
 };
 
 /**
- * Setup MinIO lifecycle rules (Simulated via script)
- * In actual MinIO, this would be: 
- * mc ilm add myminio/media --expiry-days 365 --target archived-bucket
+ * Setup S3 lifecycle rules (Simulated via script)
+ * In actual AWS S3, this would use PutBucketLifecycleConfigurationCommand
  */
-export const setupMinioLifecycle = async () => {
-    console.log('[MinIO] Setting up lifecycle policies for storage optimization...');
-    // Implementation would use MinIO client to set bucket lifecycle
+export const setupS3Lifecycle = async () => {
+    console.log('[S3] Setting up lifecycle policies for storage optimization...');
+    // Implementation would use S3 client to set bucket lifecycle
 };

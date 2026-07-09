@@ -60,6 +60,22 @@ const AuthoritySettings = () => {
         newPassword: '',
         confirmPassword: ''
     });
+    const [passwordError, setPasswordError] = useState('');
+
+    const validatePasswordStrength = (password) => {
+        if (!password) return '';
+        const hasUpper = /[A-Z]/.test(password);
+        const hasLower = /[a-z]/.test(password);
+        const hasDigit = /[0-9]/.test(password);
+        const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password);
+        const missing = [];
+        if (!hasUpper) missing.push('uppercase letter');
+        if (!hasLower) missing.push('lowercase letter');
+        if (!hasDigit) missing.push('number');
+        if (!hasSpecial) missing.push('special character (!@#$...)');
+        if (password.length < 8) missing.push('at least 8 characters');
+        return missing.length ? `Password must include: ${missing.join(', ')}.` : '';
+    };
 
     const sections = [
         { id: 'profile', title: 'My Profile', icon: User, desc: 'Manage your field officer identity.' },
@@ -79,8 +95,19 @@ const AuthoritySettings = () => {
                 });
                 updateUser(updatedUserData);
             } else if (activeSection === 'security' && security.newPassword) {
+                if (!security.currentPassword) {
+                    alert('Please enter your current password.');
+                    setSaving(false);
+                    return;
+                }
                 if (security.newPassword !== security.confirmPassword) {
-                    alert("Passwords do not match!");
+                    alert('Passwords do not match!');
+                    setSaving(false);
+                    return;
+                }
+                const strengthErr = validatePasswordStrength(security.newPassword);
+                if (strengthErr) {
+                    alert(strengthErr);
                     setSaving(false);
                     return;
                 }
@@ -89,6 +116,7 @@ const AuthoritySettings = () => {
                     newPassword: security.newPassword
                 });
                 setSecurity({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                setPasswordError('');
             } else if (activeSection === 'notifications') {
                 const { error } = await supabase.auth.updateUser({
                     data: {
@@ -197,9 +225,16 @@ const AuthoritySettings = () => {
                                     <input
                                         type="password"
                                         value={security.newPassword}
-                                        onChange={(e) => setSecurity({ ...security, newPassword: e.target.value })}
+                                        onChange={(e) => {
+                                            setSecurity({ ...security, newPassword: e.target.value });
+                                            setPasswordError(validatePasswordStrength(e.target.value));
+                                        }}
                                         className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-indigo-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                                        placeholder="Min 8 chars, uppercase, lowercase, number & symbol"
                                     />
+                                    {passwordError && (
+                                        <p className="text-xs text-red-500 mt-1">{passwordError}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-xs font-black uppercase text-gray-500 mb-2">Confirm New Password</label>
@@ -209,6 +244,9 @@ const AuthoritySettings = () => {
                                         onChange={(e) => setSecurity({ ...security, confirmPassword: e.target.value })}
                                         className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-indigo-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
                                     />
+                                    {security.confirmPassword && security.newPassword !== security.confirmPassword && (
+                                        <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+                                    )}
                                 </div>
                             </div>
                         </div>

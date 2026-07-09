@@ -10,11 +10,11 @@ export class Issue extends Model {
     declare description: string;
     declare priority_score: number;
     declare status: string;
-    declare minio_pre_key: string;
-    declare minio_audio_key: string | null;
+    declare s3_pre_key: string;
+    declare s3_audio_key: string | null;
     declare reporter_ids: string[];
-    declare minio_image_urls: string[];
-    declare minio_audio_urls: string[];
+    declare s3_image_urls: string[];
+    declare s3_audio_urls: string[];
     declare ai_image_top3: any;
 
     declare ai_audio_top3: any;
@@ -70,11 +70,11 @@ Issue.init({
         type: DataTypes.STRING,
         defaultValue: 'Pending',
     },
-    minio_pre_key: {
+    s3_pre_key: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    minio_audio_key: {
+    s3_audio_key: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
@@ -82,11 +82,11 @@ Issue.init({
         type: DataTypes.ARRAY(DataTypes.UUID),
         defaultValue: [],
     },
-    minio_image_urls: {
+    s3_image_urls: {
         type: DataTypes.ARRAY(DataTypes.TEXT),
         defaultValue: [],
     },
-    minio_audio_urls: {
+    s3_audio_urls: {
         type: DataTypes.ARRAY(DataTypes.TEXT),
         defaultValue: [],
     },
