@@ -21,7 +21,11 @@ const JurisdictionForm = ({
     zones = [],
     ulbs,
     wards,
-    darkMode
+    darkMode,
+    fetchingOSM,
+    onImportFromOSM,
+    selectedCountry,
+    setSelectedCountry
 }) => {
     return (
         <div className={`p-8 rounded-3xl shadow-xl flex flex-col justify-between ${darkMode ? 'bg-gray-800/40 border border-white/5' : 'bg-white shadow-gray-200/50'}`}>
@@ -34,18 +38,44 @@ const JurisdictionForm = ({
                 <form onSubmit={onSubmit} className="space-y-6">
                     <div>
                         <label className="block text-xs font-black uppercase text-gray-500 mb-2">Boundary Name</label>
-                        <input
-                            type="text"
-                            placeholder={
-                                activeTab === 'wards' ? 'e.g. Adajan' : 
-                                activeTab === 'zones' ? 'e.g. West Zone' : 
-                                'e.g. Surat Municipal Corporation'
-                            }
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className={`w-full p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
-                            required
-                        />
+                        <div className="space-y-2">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder={
+                                        activeTab === 'wards' ? 'e.g. Adajan' : 
+                                        activeTab === 'zones' ? 'e.g. West Zone' : 
+                                        'e.g. Surat Municipal Corporation'
+                                    }
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className={`flex-1 p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                                    required
+                                />
+                                <select
+                                    value={selectedCountry}
+                                    onChange={(e) => setSelectedCountry(e.target.value)}
+                                    className={`w-32 p-4 rounded-xl border-none ring-1 ring-gray-200 dark:ring-white/10 outline-none focus:ring-2 focus:ring-violet-500 text-sm ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-50 text-gray-900'}`}
+                                    title="Select search country"
+                                >
+                                    <option value="IN">🇮🇳 India</option>
+                                    <option value="US">🇺🇸 USA</option>
+                                    <option value="GB">🇬🇧 UK</option>
+                                    <option value="CA">🇨🇦 Canada</option>
+                                    <option value="AU">🇦🇺 Australia</option>
+                                    <option value="FR">🇫🇷 France</option>
+                                    <option value="DE">🇩🇪 Germany</option>
+                                </select>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={onImportFromOSM}
+                                disabled={fetchingOSM}
+                                className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex justify-center items-center gap-2 border border-violet-500/30 hover:bg-violet-500/10 transition-colors text-violet-500 disabled:opacity-50`}
+                            >
+                                {fetchingOSM ? 'Fetching Boundary from OSM...' : '🔍 Autofill Boundary from OpenStreetMap'}
+                            </button>
+                        </div>
                     </div>
 
                     {activeTab === 'zones' && (

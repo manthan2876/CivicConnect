@@ -14,6 +14,7 @@
     "analyze:mobile": "cd mobile && flutter analyze",
     "seed:users": "npm --prefix backend run seed:users",
     "seed:database": "npm --prefix backend run seed:database",
+    "seed:ulb-boundaries": "npm --prefix backend run seed:ulb-boundaries",
     "fix:security": "npm --prefix backend run fix:security",
     "build:backend": "npm --prefix backend run build",
     "build:dashboard": "npm --prefix admin-dashboard run build"

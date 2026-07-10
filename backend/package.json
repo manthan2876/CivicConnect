@@ -8,6 +8,7 @@
     "start": "node dist/index.js",
     "seed:users": "tsx src/seed/seedUsers.ts",
     "seed:database": "tsx src/seed/seedAll.ts",
+    "seed:ulb-boundaries": "tsx src/seed/ulbBoundaries.ts",
     "fix:security": "tsx src/scripts/fixSecurity.ts"
   },
   "dependencies": {

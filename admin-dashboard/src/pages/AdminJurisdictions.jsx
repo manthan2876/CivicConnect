@@ -31,7 +31,13 @@ const AdminJurisdictions = () => {
         handleMapClick,
         handleUndo,
         handleClear,
-        handleCreateJurisdiction
+        handleCreateJurisdiction,
+        fetchingOSM,
+        handleImportFromOSM,
+        handleMarkerDrag,
+        handleMarkerDelete,
+        selectedCountry,
+        setSelectedCountry
     } = useAdminJurisdictions();
 
     return (
@@ -88,6 +94,10 @@ const AdminJurisdictions = () => {
                     ulbs={ulbs}
                     wards={wards}
                     darkMode={darkMode}
+                    fetchingOSM={fetchingOSM}
+                    onImportFromOSM={handleImportFromOSM}
+                    selectedCountry={selectedCountry}
+                    setSelectedCountry={setSelectedCountry}
                 />
 
                 {/* Right Panel: Interactive Drawing Map */}
@@ -100,6 +110,10 @@ const AdminJurisdictions = () => {
                     activeTab={activeTab}
                     selectedZone={selectedZone}
                     zones={zones}
+                    selectedUlb={selectedUlb}
+                    ulbs={ulbs}
+                    onMarkerDrag={handleMarkerDrag}
+                    onMarkerDelete={handleMarkerDelete}
                 />
             </div>
         </div>

@@ -53,6 +53,11 @@ export const createWard = async (req: AuthRequest, res: Response) => {
             formattedCoordinates.push([first[0], first[1]]);
         }
 
+        const wardGeom = {
+            type: 'Polygon',
+            coordinates: [formattedCoordinates]
+        };
+
         // Perform ST_Within spatial containment check if zone_id is provided
         if (zone_id) {
             const zone = await Zone.findByPk(zone_id);
@@ -60,11 +65,6 @@ export const createWard = async (req: AuthRequest, res: Response) => {
                 return res.status(404).json({ error: 'Selected Zone not found.' });
             }
             if (zone.boundary) {
-                const wardGeom = {
-                    type: 'Polygon',
-                    coordinates: [formattedCoordinates]
-                };
-
                 const queryStr = `
                     SELECT ST_Within(
                         ST_GeomFromGeoJSON(:wardGeom),
@@ -82,6 +82,34 @@ export const createWard = async (req: AuthRequest, res: Response) => {
 
                 if (!spatialCheck || !spatialCheck.is_within) {
                     return res.status(400).json({ error: "Ward boundary must be completely within the selected zone's boundary." });
+                }
+            }
+        }
+
+        // Perform ST_Within spatial containment check if ulb_id is provided
+        if (ulb_id) {
+            const ulb = await UlbBoundary.findByPk(ulb_id);
+            if (!ulb) {
+                return res.status(404).json({ error: 'Selected City (ULB) not found.' });
+            }
+            if (ulb.geom) {
+                const queryStr = `
+                    SELECT ST_Within(
+                        ST_GeomFromGeoJSON(:wardGeom),
+                        ST_GeomFromGeoJSON(:ulbGeom)
+                    ) AS is_within
+                `;
+
+                const [spatialCheck]: any = await sequelize.query(queryStr, {
+                    replacements: {
+                        wardGeom: JSON.stringify(wardGeom),
+                        ulbGeom: JSON.stringify(ulb.geom)
+                    },
+                    type: QueryTypes.SELECT
+                });
+
+                if (!spatialCheck || !spatialCheck.is_within) {
+                    return res.status(400).json({ error: "Ward boundary must be completely within the selected city's boundary." });
                 }
             }
         }

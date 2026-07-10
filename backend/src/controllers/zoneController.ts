@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
-import { Zone, UlbBoundary } from '../config/db.js';
+import { Zone, UlbBoundary, sequelize } from '../config/db.js';
+import { QueryTypes } from 'sequelize';
 
 export interface AuthRequest extends Request {
     user?: any;
@@ -41,18 +42,48 @@ export const createZone = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'Name and code are required.' });
         }
 
-        let boundaryObj: any = null;
-        if (boundaryCoordinates && boundaryCoordinates.length >= 3) {
-            const formattedCoordinates = boundaryCoordinates.map((p: [number, number]) => [p[1], p[0]]);
-            const first = formattedCoordinates[0];
-            const last = formattedCoordinates[formattedCoordinates.length - 1];
-            if (first[0] !== last[0] || first[1] !== last[1]) {
-                formattedCoordinates.push([first[0], first[1]]);
+        if (!boundaryCoordinates || boundaryCoordinates.length < 3) {
+            return res.status(400).json({ error: 'At least 3 boundary vertices are required to define the zone.' });
+        }
+
+        const formattedCoordinates = boundaryCoordinates.map((p: [number, number]) => [p[1], p[0]]);
+        const first = formattedCoordinates[0];
+        const last = formattedCoordinates[formattedCoordinates.length - 1];
+        if (first[0] !== last[0] || first[1] !== last[1]) {
+            formattedCoordinates.push([first[0], first[1]]);
+        }
+        
+        const boundaryObj = {
+            type: 'Polygon',
+            coordinates: [formattedCoordinates]
+        };
+
+        // Perform ST_Within spatial containment check if ulb_id is provided
+        if (ulb_id) {
+            const ulb = await UlbBoundary.findByPk(ulb_id);
+            if (!ulb) {
+                return res.status(404).json({ error: 'Selected City (ULB) not found.' });
             }
-            boundaryObj = {
-                type: 'Polygon',
-                coordinates: [formattedCoordinates]
-            };
+            if (ulb.geom) {
+                const queryStr = `
+                    SELECT ST_Within(
+                        ST_GeomFromGeoJSON(:zoneGeom),
+                        ST_GeomFromGeoJSON(:ulbGeom)
+                    ) AS is_within
+                `;
+
+                const [spatialCheck]: any = await sequelize.query(queryStr, {
+                    replacements: {
+                        zoneGeom: JSON.stringify(boundaryObj),
+                        ulbGeom: JSON.stringify(ulb.geom)
+                    },
+                    type: QueryTypes.SELECT
+                });
+
+                if (!spatialCheck || !spatialCheck.is_within) {
+                    return res.status(400).json({ error: "Zone boundary must be completely within the selected city's boundary." });
+                }
+            }
         }
 
         const zone = await Zone.create({
