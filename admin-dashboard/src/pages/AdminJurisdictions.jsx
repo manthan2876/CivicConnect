@@ -41,11 +41,31 @@ const AdminJurisdictions = () => {
         editingItem,
         handleStartEdit,
         handleCancelEdit,
-        handleDeleteJurisdiction
+        handleDeleteJurisdiction,
+        previewItem,
+        handleTogglePreview,
+        toast
     } = useAdminJurisdictions();
 
     return (
         <div className="space-y-8 animate-fade-in-up">
+            {toast && (
+                <div className="fixed bottom-6 right-6 z-[9999] animate-fade-in-up">
+                    <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border text-sm font-bold backdrop-blur-md ${
+                        toast.type === 'error' 
+                            ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' 
+                            : toast.type === 'info' 
+                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' 
+                            : 'bg-green-500/10 border-green-500/20 text-green-400'
+                    }`}>
+                        <div className={`w-2 h-2 rounded-full ${
+                            toast.type === 'error' ? 'bg-rose-500' : toast.type === 'info' ? 'bg-blue-400' : 'bg-green-400'
+                        }`} />
+                        <span>{toast.message}</span>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className={`text-4xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>Jurisdictions & Boundaries</h1>
@@ -106,6 +126,8 @@ const AdminJurisdictions = () => {
                     onStartEdit={handleStartEdit}
                     onCancelEdit={handleCancelEdit}
                     onDelete={handleDeleteJurisdiction}
+                    previewItem={previewItem}
+                    onTogglePreview={handleTogglePreview}
                 />
 
                 {/* Right Panel: Interactive Drawing Map */}
@@ -122,6 +144,7 @@ const AdminJurisdictions = () => {
                     ulbs={ulbs}
                     onMarkerDrag={handleMarkerDrag}
                     onMarkerDelete={handleMarkerDelete}
+                    previewItem={previewItem}
                 />
             </div>
         </div>

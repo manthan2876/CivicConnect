@@ -22,6 +22,13 @@ export const useAdminJurisdictions = () => {
     const [mapCenter, setMapCenter] = useState([21.1702, 72.8311]); // Surat default center
 
     const [editingItem, setEditingItem] = useState(null); // { id, type }
+    const [previewItem, setPreviewItem] = useState(null); // { id, type, name, coordinates }
+    const [toast, setToast] = useState(null); // { message, type }
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const [showHelp, setShowHelp] = useState(true);
 
@@ -60,7 +67,7 @@ export const useAdminJurisdictions = () => {
             setZones(zonesData);
         } catch (error) {
             console.error('Failed to fetch jurisdictional data:', error);
-            alert('Failed to load data: ' + error.message);
+            showToast('Failed to load data: ' + error.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -113,7 +120,7 @@ export const useAdminJurisdictions = () => {
             const activeUlb = ulbs.find(u => u.id.toString() === selectedUlb.toString());
             if (activeUlb && activeUlb.geom) {
                 if (!isPointInUlb(point, activeUlb.geom)) {
-                    alert('You can only draw zone boundaries inside the selected City (ULB) boundary.');
+                    showToast('You can only draw zone boundaries inside the selected City (ULB) boundary.', 'error');
                     return;
                 }
             }
@@ -124,7 +131,7 @@ export const useAdminJurisdictions = () => {
                 const activeZone = zones.find(z => z.id === selectedZone);
                 if (activeZone && activeZone.boundary) {
                     if (!isPointInZone(point, activeZone.boundary)) {
-                        alert('You can only draw ward boundaries inside the selected Zone boundary.');
+                        showToast('You can only draw ward boundaries inside the selected Zone boundary.', 'error');
                         return;
                     }
                 }
@@ -133,7 +140,7 @@ export const useAdminJurisdictions = () => {
                 const activeUlb = ulbs.find(u => u.id.toString() === selectedUlb.toString());
                 if (activeUlb && activeUlb.geom) {
                     if (!isPointInUlb(point, activeUlb.geom)) {
-                        alert('You can only draw ward boundaries inside the selected City (ULB) boundary.');
+                        showToast('You can only draw ward boundaries inside the selected City (ULB) boundary.', 'error');
                         return;
                     }
                 }
@@ -188,7 +195,7 @@ export const useAdminJurisdictions = () => {
     };
 
     const handleImportFromOSM = async () => {
-        if (!name) return alert('Please enter a boundary Name first to search on OpenStreetMap.');
+        if (!name) return showToast('Please enter a boundary Name first to search on OpenStreetMap.', 'error');
         setFetchingOSM(true);
         try {
             const coords = await fetchOSMBoundary(name, selectedCountry);
@@ -196,9 +203,9 @@ export const useAdminJurisdictions = () => {
             if (coords.length > 0) {
                 setMapCenter(coords[0]);
             }
-            alert(`Successfully loaded ${coords.length} points from OpenStreetMap! You can now adjust, insert, or delete points on the map.`);
+            showToast(`Successfully loaded ${coords.length} points from OpenStreetMap! You can now adjust, insert, or delete points on the map.`, 'success');
         } catch (err) {
-            alert('Failed to fetch boundary: ' + err.message);
+            showToast('Failed to fetch boundary: ' + err.message, 'error');
         } finally {
             setFetchingOSM(false);
         }
@@ -211,7 +218,7 @@ export const useAdminJurisdictions = () => {
         if (activeTab === 'zones' && selectedUlb) {
             const activeUlb = ulbs.find(u => u.id.toString() === selectedUlb.toString());
             if (activeUlb && activeUlb.geom && !isPointInUlb(point, activeUlb.geom)) {
-                alert('You cannot move boundary vertices outside the selected City (ULB) boundary.');
+                showToast('You cannot move boundary vertices outside the selected City (ULB) boundary.', 'error');
                 return;
             }
         }
@@ -220,14 +227,14 @@ export const useAdminJurisdictions = () => {
             if (selectedZone) {
                 const activeZone = zones.find(z => z.id === selectedZone);
                 if (activeZone && activeZone.boundary && !isPointInZone(point, activeZone.boundary)) {
-                    alert('You cannot move boundary vertices outside the selected Zone boundary.');
+                    showToast('You cannot move boundary vertices outside the selected Zone boundary.', 'error');
                     return;
                 }
             }
             if (selectedUlb) {
                 const activeUlb = ulbs.find(u => u.id.toString() === selectedUlb.toString());
                 if (activeUlb && activeUlb.geom && !isPointInUlb(point, activeUlb.geom)) {
-                    alert('You cannot move boundary vertices outside the selected City (ULB) boundary.');
+                    showToast('You cannot move boundary vertices outside the selected City (ULB) boundary.', 'error');
                     return;
                 }
             }
@@ -298,6 +305,35 @@ export const useAdminJurisdictions = () => {
         setDrawnPoints([]);
     };
 
+    const handleTogglePreview = (item, type) => {
+        if (previewItem && previewItem.id === item.id && previewItem.type === type) {
+            setPreviewItem(null);
+            return;
+        }
+
+        let boundaryGeo = type === 'ulbs' ? item.geom : type === 'zones' ? item.boundary : item.boundary;
+        if (boundaryGeo && boundaryGeo.coordinates) {
+            let rawCoords = [];
+            if (boundaryGeo.type === 'MultiPolygon') {
+                rawCoords = boundaryGeo.coordinates[0][0] || [];
+            } else if (boundaryGeo.type === 'Polygon') {
+                rawCoords = boundaryGeo.coordinates[0] || [];
+            }
+            let coords = rawCoords.map(c => [c[1], c[0]]);
+            
+            setPreviewItem({
+                id: item.id,
+                type,
+                name: item.name,
+                coordinates: coords
+            });
+
+            if (coords.length > 0) {
+                setMapCenter(coords[0]);
+            }
+        }
+    };
+
     const handleDeleteJurisdiction = async (id, type) => {
         const confirmMsg = type === 'ulbs' 
             ? "Are you sure you want to delete this City? Deleting it will also delete all associated Zones and Wards!" 
@@ -319,24 +355,27 @@ export const useAdminJurisdictions = () => {
             if (editingItem && editingItem.id === id && editingItem.type === type) {
                 handleCancelEdit();
             }
+            if (previewItem && previewItem.id === id && previewItem.type === type) {
+                setPreviewItem(null);
+            }
             
             fetchData();
-            alert(`${type === 'wards' ? 'Ward' : type === 'zones' ? 'Zone' : 'City (ULB)'} deleted successfully!`);
+            showToast(`${type === 'wards' ? 'Ward' : type === 'zones' ? 'Zone' : 'City (ULB)'} deleted successfully!`, 'success');
         } catch (err) {
-            alert('Failed to delete jurisdiction: ' + (err.response?.data?.error || err.message));
+            showToast('Failed to delete jurisdiction: ' + (err.response?.data?.error || err.message), 'error');
         }
     };
 
     const handleCreateJurisdiction = async (e) => {
         e.preventDefault();
-        if (!name) return alert('Name is required');
-        if (drawnPoints.length < 3) return alert('Please mark at least 3 points on the map to define the boundary.');
+        if (!name) return showToast('Name is required', 'error');
+        if (drawnPoints.length < 3) return showToast('Please mark at least 3 points on the map to define the boundary.', 'error');
 
         try {
             if (editingItem) {
                 // Update mode
                 if (editingItem.type === 'wards') {
-                    if (!selectedDept) return alert('Please assign a department to the ward');
+                    if (!selectedDept) return showToast('Please assign a department to the ward', 'error');
                     await systemApi.updateWard(editingItem.id, {
                         name,
                         dept_id: selectedDept,
@@ -345,7 +384,7 @@ export const useAdminJurisdictions = () => {
                         boundaryCoordinates: drawnPoints
                     });
                 } else if (editingItem.type === 'zones') {
-                    if (!code) return alert('Zone code is required');
+                    if (!code) return showToast('Zone code is required', 'error');
                     await systemApi.updateZone(editingItem.id, {
                         name,
                         code,
@@ -358,12 +397,12 @@ export const useAdminJurisdictions = () => {
                         boundaryCoordinates: drawnPoints
                     });
                 }
-                alert(`${editingItem.type === 'wards' ? 'Ward' : editingItem.type === 'zones' ? 'Zone' : 'City (ULB)'} updated successfully!`);
+                showToast(`${editingItem.type === 'wards' ? 'Ward' : editingItem.type === 'zones' ? 'Zone' : 'City (ULB)'} updated successfully!`, 'success');
                 setEditingItem(null);
             } else {
                 // Create mode
                 if (activeTab === 'wards') {
-                    if (!selectedDept) return alert('Please assign a department to the ward');
+                    if (!selectedDept) return showToast('Please assign a department to the ward', 'error');
                     await systemApi.createWard({
                         name,
                         dept_id: selectedDept,
@@ -372,7 +411,7 @@ export const useAdminJurisdictions = () => {
                         boundaryCoordinates: drawnPoints
                     });
                 } else if (activeTab === 'zones') {
-                    if (!code) return alert('Zone code is required');
+                    if (!code) return showToast('Zone code is required', 'error');
                     await systemApi.createZone({
                         name,
                         code,
@@ -385,7 +424,7 @@ export const useAdminJurisdictions = () => {
                         boundaryCoordinates: drawnPoints
                     });
                 }
-                alert(`${activeTab === 'wards' ? 'Ward' : activeTab === 'zones' ? 'Zone' : 'City (ULB)'} created successfully!`);
+                showToast(`${activeTab === 'wards' ? 'Ward' : activeTab === 'zones' ? 'Zone' : 'City (ULB)'} created successfully!`, 'success');
             }
 
             setName('');
@@ -394,9 +433,10 @@ export const useAdminJurisdictions = () => {
             setSelectedDept('');
             setSelectedZone('');
             setSelectedUlb('');
+            setPreviewItem(null);
             fetchData();
         } catch (err) {
-            alert('Failed to save boundary: ' + (err.response?.data?.error || err.message));
+            showToast('Failed to save boundary: ' + (err.response?.data?.error || err.message), 'error');
         }
     };
 
@@ -437,6 +477,9 @@ export const useAdminJurisdictions = () => {
         editingItem,
         handleStartEdit,
         handleCancelEdit,
-        handleDeleteJurisdiction
+        handleDeleteJurisdiction,
+        previewItem,
+        handleTogglePreview,
+        toast
     };
 };

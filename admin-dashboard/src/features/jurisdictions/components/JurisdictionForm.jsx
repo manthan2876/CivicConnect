@@ -211,94 +211,166 @@ const JurisdictionForm = ({
                 <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                     {activeTab === 'wards' ? (
                         wards.length > 0 ? (
-                            wards.map(w => (
-                                <div key={w.id} className={`p-3 rounded-xl flex justify-between items-center text-xs ${darkMode ? 'bg-gray-900/40 hover:bg-gray-900/60' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="font-bold">{w.name}</span>
-                                        <span className="text-[10px] text-gray-500 font-bold">{w.department?.name || 'No Dept'}</span>
+                            wards.map(w => {
+                                const isEditing = editingItem && editingItem.id === w.id && editingItem.type === 'wards';
+                                const isPreviewing = previewItem && previewItem.id === w.id && previewItem.type === 'wards';
+                                return (
+                                    <div 
+                                        key={w.id} 
+                                        onClick={() => onTogglePreview(w, 'wards')}
+                                        className={`p-3 rounded-xl flex justify-between items-center text-xs cursor-pointer border transition-all ${
+                                            isEditing 
+                                                ? 'bg-violet-500/10 border-violet-500/30 ring-2 ring-violet-500/30 text-violet-500' 
+                                                : isPreviewing 
+                                                ? 'bg-amber-500/10 border-amber-500/30 ring-2 ring-amber-500/30 text-amber-600 dark:text-amber-400' 
+                                                : darkMode 
+                                                ? 'bg-gray-900/40 hover:bg-gray-900/60 border-transparent text-gray-200' 
+                                                : 'bg-gray-50 hover:bg-gray-100 border-transparent text-gray-700'
+                                        }`}
+                                    >
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold">{w.name}</span>
+                                                {isEditing && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500 text-white font-extrabold tracking-wide uppercase">Editing</span>
+                                                )}
+                                                {isPreviewing && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-extrabold tracking-wide uppercase">Preview</span>
+                                                )}
+                                            </div>
+                                            <span className="text-[10px] text-gray-500 font-bold">{w.department?.name || 'No Dept'}</span>
+                                        </div>
+                                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                type="button"
+                                                onClick={() => onStartEdit(w, 'wards')}
+                                                className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
+                                                title="Edit Ward Boundary"
+                                            >
+                                                <Pencil size={12} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => onDelete(w.id, 'wards')}
+                                                className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
+                                                title="Delete Ward"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => onStartEdit(w, 'wards')}
-                                            className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
-                                            title="Edit Ward Boundary"
-                                        >
-                                            <Pencil size={12} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => onDelete(w.id, 'wards')}
-                                            className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
-                                            title="Delete Ward"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <p className="text-xs text-gray-500 italic">No wards registered.</p>
                         )
                     ) : activeTab === 'zones' ? (
                         zones.length > 0 ? (
-                            zones.map(z => (
-                                <div key={z.id} className={`p-3 rounded-xl flex justify-between items-center text-xs ${darkMode ? 'bg-gray-900/40 hover:bg-gray-900/60' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="font-bold">{z.name} ({z.code})</span>
-                                        <span className="text-[10px] text-gray-500 font-bold">ID: {z.id.slice(0, 8)}</span>
+                            zones.map(z => {
+                                const isEditing = editingItem && editingItem.id === z.id && editingItem.type === 'zones';
+                                const isPreviewing = previewItem && previewItem.id === z.id && previewItem.type === 'zones';
+                                return (
+                                    <div 
+                                        key={z.id} 
+                                        onClick={() => onTogglePreview(z, 'zones')}
+                                        className={`p-3 rounded-xl flex justify-between items-center text-xs cursor-pointer border transition-all ${
+                                            isEditing 
+                                                ? 'bg-violet-500/10 border-violet-500/30 ring-2 ring-violet-500/30 text-violet-500' 
+                                                : isPreviewing 
+                                                ? 'bg-amber-500/10 border-amber-500/30 ring-2 ring-amber-500/30 text-amber-600 dark:text-amber-400' 
+                                                : darkMode 
+                                                ? 'bg-gray-900/40 hover:bg-gray-900/60 border-transparent text-gray-200' 
+                                                : 'bg-gray-50 hover:bg-gray-100 border-transparent text-gray-700'
+                                        }`}
+                                    >
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold">{z.name} ({z.code})</span>
+                                                {isEditing && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500 text-white font-extrabold tracking-wide uppercase">Editing</span>
+                                                )}
+                                                {isPreviewing && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-extrabold tracking-wide uppercase">Preview</span>
+                                                )}
+                                            </div>
+                                            <span className="text-[10px] text-gray-500 font-bold">ID: {z.id.slice(0, 8)}</span>
+                                        </div>
+                                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                type="button"
+                                                onClick={() => onStartEdit(z, 'zones')}
+                                                className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
+                                                title="Edit Zone Boundary"
+                                            >
+                                                <Pencil size={12} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => onDelete(z.id, 'zones')}
+                                                className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
+                                                title="Delete Zone"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => onStartEdit(z, 'zones')}
-                                            className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
-                                            title="Edit Zone Boundary"
-                                        >
-                                            <Pencil size={12} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => onDelete(z.id, 'zones')}
-                                            className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
-                                            title="Delete Zone"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <p className="text-xs text-gray-500 italic">No zones registered.</p>
                         )
                     ) : (
                         ulbs.length > 0 ? (
-                            ulbs.map(u => (
-                                <div key={u.id} className={`p-3 rounded-xl flex justify-between items-center text-xs ${darkMode ? 'bg-gray-900/40 hover:bg-gray-900/60' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="font-bold">{u.name}</span>
-                                        <span className="text-[10px] text-gray-500 font-bold">ID: {u.id}</span>
+                            ulbs.map(u => {
+                                const isEditing = editingItem && editingItem.id === u.id && editingItem.type === 'ulbs';
+                                const isPreviewing = previewItem && previewItem.id === u.id && previewItem.type === 'ulbs';
+                                return (
+                                    <div 
+                                        key={u.id} 
+                                        onClick={() => onTogglePreview(u, 'ulbs')}
+                                        className={`p-3 rounded-xl flex justify-between items-center text-xs cursor-pointer border transition-all ${
+                                            isEditing 
+                                                ? 'bg-violet-500/10 border-violet-500/30 ring-2 ring-violet-500/30 text-violet-500' 
+                                                : isPreviewing 
+                                                ? 'bg-amber-500/10 border-amber-500/30 ring-2 ring-amber-500/30 text-amber-600 dark:text-amber-400' 
+                                                : darkMode 
+                                                ? 'bg-gray-900/40 hover:bg-gray-900/60 border-transparent text-gray-200' 
+                                                : 'bg-gray-50 hover:bg-gray-100 border-transparent text-gray-700'
+                                        }`}
+                                    >
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold">{u.name}</span>
+                                                {isEditing && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500 text-white font-extrabold tracking-wide uppercase">Editing</span>
+                                                )}
+                                                {isPreviewing && (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-extrabold tracking-wide uppercase">Preview</span>
+                                                )}
+                                            </div>
+                                            <span className="text-[10px] text-gray-500 font-bold">ID: {u.id}</span>
+                                        </div>
+                                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                type="button"
+                                                onClick={() => onStartEdit(u, 'ulbs')}
+                                                className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
+                                                title="Edit City Boundary"
+                                            >
+                                                <Pencil size={12} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => onDelete(u.id, 'ulbs')}
+                                                className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
+                                                title="Delete City"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => onStartEdit(u, 'ulbs')}
-                                            className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
-                                            title="Edit City Boundary"
-                                        >
-                                            <Pencil size={12} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => onDelete(u.id, 'ulbs')}
-                                            className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
-                                            title="Delete City"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <p className="text-xs text-gray-500 italic">No Cities (ULBs) registered.</p>
                         )
