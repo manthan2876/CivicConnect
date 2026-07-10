@@ -84,7 +84,7 @@ const JurisdictionMap = ({
     // Extract selected zone positions to render dashed border
     const activeZone = zones.find(z => z.id === selectedZone);
     const getZonePositions = () => {
-        if (!activeZone || !activeZone.boundary || !activeZone.boundary.coordinates) return null;
+        if (!activeZone || !activeZone.boundary || !activeZone.boundary.coordinates || !activeZone.boundary.coordinates[0]) return null;
         const coords = activeZone.boundary.coordinates[0];
         return coords.map(c => [c[1], c[0]]); // Swapping [lng, lat] to [lat, lng] for Leaflet
     };
@@ -97,9 +97,11 @@ const JurisdictionMap = ({
         if (!activeUlb || !activeUlb.geom || !activeUlb.geom.coordinates) return null;
         const geom = activeUlb.geom;
         if (geom.type === 'MultiPolygon') {
+            if (!geom.coordinates[0] || !geom.coordinates[0][0]) return null;
             const coords = geom.coordinates[0][0];
             return coords.map((c) => [c[1], c[0]]);
         } else if (geom.type === 'Polygon') {
+            if (!geom.coordinates[0]) return null;
             const coords = geom.coordinates[0];
             return coords.map((c) => [c[1], c[0]]);
         }
