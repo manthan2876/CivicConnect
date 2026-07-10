@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Undo2, RotateCcw, Save } from 'lucide-react';
+import { Layers, Undo2, RotateCcw, Save, Pencil, Trash2, X } from 'lucide-react';
 
 const JurisdictionForm = ({
     activeTab,
@@ -25,14 +25,18 @@ const JurisdictionForm = ({
     fetchingOSM,
     onImportFromOSM,
     selectedCountry,
-    setSelectedCountry
+    setSelectedCountry,
+    editingItem,
+    onStartEdit,
+    onCancelEdit,
+    onDelete
 }) => {
     return (
         <div className={`p-8 rounded-3xl shadow-xl flex flex-col justify-between ${darkMode ? 'bg-gray-800/40 border border-white/5' : 'bg-white shadow-gray-200/50'}`}>
             <div>
                 <h2 className={`text-2xl font-black mb-6 flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     <Layers className="text-violet-500" />
-                    Create {activeTab === 'wards' ? 'New Ward' : activeTab === 'zones' ? 'New Zone' : 'New ULB'}
+                    {editingItem ? 'Edit' : 'Create'} {activeTab === 'wards' ? 'Ward' : activeTab === 'zones' ? 'Zone' : 'ULB'}
                 </h2>
 
                 <form onSubmit={onSubmit} className="space-y-6">
@@ -179,26 +183,58 @@ const JurisdictionForm = ({
                         </div>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={drawnPoints.length < 3}
-                        className={`w-full py-4 rounded-2xl shadow-xl transition-all font-black text-sm flex justify-center items-center gap-2 ${drawnPoints.length >= 3 ? 'bg-violet-600 hover:bg-violet-700 text-white' : 'bg-gray-500/20 text-gray-500 cursor-not-allowed'}`}
-                    >
-                        <Save size={16} />
-                        Save Jurisdiction
-                    </button>
+                    <div className="flex gap-2">
+                        {editingItem && (
+                            <button
+                                type="button"
+                                onClick={onCancelEdit}
+                                className={`flex-1 py-4 rounded-2xl font-black text-sm flex justify-center items-center gap-2 border border-gray-200 dark:border-white/10 hover:bg-gray-500/10 transition-colors ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}
+                            >
+                                <X size={16} />
+                                Cancel
+                            </button>
+                        )}
+                        <button
+                            type="submit"
+                            disabled={drawnPoints.length < 3}
+                            className={`flex-1 py-4 rounded-2xl shadow-xl transition-all font-black text-sm flex justify-center items-center gap-2 ${drawnPoints.length >= 3 ? 'bg-violet-600 hover:bg-violet-700 text-white animate-pulse-subtle' : 'bg-gray-500/20 text-gray-500 cursor-not-allowed'}`}
+                        >
+                            <Save size={16} />
+                            {editingItem ? 'Update' : 'Save'} Jurisdiction
+                        </button>
+                    </div>
                 </form>
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-white/10">
                 <h3 className="text-xs font-black uppercase text-gray-500 mb-3">Existing {activeTab === 'wards' ? 'Wards' : activeTab === 'zones' ? 'Zones' : 'ULBs'}</h3>
-                <div className="max-h-48 overflow-y-auto space-y-2">
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                     {activeTab === 'wards' ? (
                         wards.length > 0 ? (
                             wards.map(w => (
                                 <div key={w.id} className={`p-3 rounded-xl flex justify-between items-center text-xs ${darkMode ? 'bg-gray-900/40 hover:bg-gray-900/60' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                                    <span className="font-bold">{w.name}</span>
-                                    <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-500 font-bold">{w.department?.name || 'No Dept'}</span>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold">{w.name}</span>
+                                        <span className="text-[10px] text-gray-500 font-bold">{w.department?.name || 'No Dept'}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => onStartEdit(w, 'wards')}
+                                            className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
+                                            title="Edit Ward Boundary"
+                                        >
+                                            <Pencil size={12} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => onDelete(w.id, 'wards')}
+                                            className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
+                                            title="Delete Ward"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         ) : (
@@ -208,8 +244,28 @@ const JurisdictionForm = ({
                         zones.length > 0 ? (
                             zones.map(z => (
                                 <div key={z.id} className={`p-3 rounded-xl flex justify-between items-center text-xs ${darkMode ? 'bg-gray-900/40 hover:bg-gray-900/60' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                                    <span className="font-bold">{z.name} ({z.code})</span>
-                                    <span className="text-gray-500">ID: {z.id.slice(0, 8)}</span>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold">{z.name} ({z.code})</span>
+                                        <span className="text-[10px] text-gray-500 font-bold">ID: {z.id.slice(0, 8)}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => onStartEdit(z, 'zones')}
+                                            className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
+                                            title="Edit Zone Boundary"
+                                        >
+                                            <Pencil size={12} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => onDelete(z.id, 'zones')}
+                                            className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
+                                            title="Delete Zone"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         ) : (
@@ -219,8 +275,28 @@ const JurisdictionForm = ({
                         ulbs.length > 0 ? (
                             ulbs.map(u => (
                                 <div key={u.id} className={`p-3 rounded-xl flex justify-between items-center text-xs ${darkMode ? 'bg-gray-900/40 hover:bg-gray-900/60' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                                    <span className="font-bold">{u.name}</span>
-                                    <span className="text-gray-500">ID: {u.id}</span>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold">{u.name}</span>
+                                        <span className="text-[10px] text-gray-500 font-bold">ID: {u.id}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => onStartEdit(u, 'ulbs')}
+                                            className="p-1.5 rounded-lg border border-transparent hover:bg-violet-500/10 text-violet-500 transition-colors"
+                                            title="Edit City Boundary"
+                                        >
+                                            <Pencil size={12} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => onDelete(u.id, 'ulbs')}
+                                            className="p-1.5 rounded-lg border border-transparent hover:bg-rose-500/10 text-rose-500 transition-colors"
+                                            title="Delete City"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         ) : (

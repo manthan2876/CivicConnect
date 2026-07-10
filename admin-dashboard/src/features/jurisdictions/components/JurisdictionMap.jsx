@@ -136,6 +136,7 @@ const JurisdictionMap = ({
                 {ulbPositions && (
                     <Polygon
                         positions={ulbPositions}
+                        interactive={false}
                         pathOptions={{
                             color: '#10B981', // Emerald green
                             fillColor: '#10B981',
@@ -150,6 +151,7 @@ const JurisdictionMap = ({
                 {zonePositions && (
                     <Polygon
                         positions={zonePositions}
+                        interactive={false}
                         pathOptions={{
                             color: '#F43F5E', // Rose/pink
                             fillColor: '#F43F5E',
@@ -164,6 +166,7 @@ const JurisdictionMap = ({
                 {drawnPoints.length >= 2 && (
                     <Polygon
                         positions={drawnPoints}
+                        interactive={false}
                         pathOptions={{
                             color: '#8B5CF6',
                             fillColor: '#8B5CF6',

@@ -98,3 +98,85 @@ export const createZone = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const updateZone = async (req: AuthRequest, res: Response) => {
+    try {
+        const user = req.user;
+        const { id } = req.params;
+        const { name, code, boundaryCoordinates } = req.body;
+        let ulb_id = req.body.ulb_id;
+
+        if (user && user.role !== 'super_admin') {
+            ulb_id = user.ulb_id;
+        }
+
+        const zone = await Zone.findByPk(id as string);
+        if (!zone) {
+            return res.status(404).json({ error: 'Zone not found.' });
+        }
+
+        if (name) zone.name = name;
+        if (code) zone.code = code;
+        if (ulb_id !== undefined) zone.ulb_id = ulb_id || null;
+
+        if (boundaryCoordinates && boundaryCoordinates.length >= 3) {
+            const formattedCoordinates = boundaryCoordinates.map((p: [number, number]) => [p[1], p[0]]);
+            const first = formattedCoordinates[0];
+            const last = formattedCoordinates[formattedCoordinates.length - 1];
+            if (first[0] !== last[0] || first[1] !== last[1]) {
+                formattedCoordinates.push([first[0], first[1]]);
+            }
+
+            const boundaryObj = {
+                type: 'Polygon',
+                coordinates: [formattedCoordinates]
+            };
+
+            const targetUlbId = ulb_id !== undefined ? ulb_id : zone.ulb_id;
+            if (targetUlbId) {
+                const ulb = await UlbBoundary.findByPk(targetUlbId);
+                if (ulb && ulb.geom) {
+                    const queryStr = `
+                        SELECT ST_Within(
+                            ST_GeomFromGeoJSON(:zoneGeom),
+                            ST_GeomFromGeoJSON(:ulbGeom)
+                        ) AS is_within
+                    `;
+
+                    const [spatialCheck]: any = await sequelize.query(queryStr, {
+                        replacements: {
+                            zoneGeom: JSON.stringify(boundaryObj),
+                            ulbGeom: JSON.stringify(ulb.geom)
+                        },
+                        type: QueryTypes.SELECT
+                    });
+
+                    if (!spatialCheck || !spatialCheck.is_within) {
+                        return res.status(400).json({ error: "Zone boundary must be completely within the selected city's boundary." });
+                    }
+                }
+            }
+
+            zone.boundary = boundaryObj;
+        }
+
+        await zone.save();
+        res.json(zone);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const deleteZone = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const zone = await Zone.findByPk(id as string);
+        if (!zone) {
+            return res.status(404).json({ error: 'Zone not found.' });
+        }
+        await zone.destroy();
+        res.json({ message: 'Zone deleted successfully.' });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
