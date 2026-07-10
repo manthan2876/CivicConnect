@@ -274,9 +274,13 @@ export const useAdminJurisdictions = () => {
         if (boundaryGeo && boundaryGeo.coordinates) {
             let rawCoords = [];
             if (boundaryGeo.type === 'MultiPolygon') {
-                rawCoords = boundaryGeo.coordinates[0][0] || [];
+                if (boundaryGeo.coordinates[0] && boundaryGeo.coordinates[0][0]) {
+                    rawCoords = boundaryGeo.coordinates[0][0];
+                }
             } else if (boundaryGeo.type === 'Polygon') {
-                rawCoords = boundaryGeo.coordinates[0] || [];
+                if (boundaryGeo.coordinates[0]) {
+                    rawCoords = boundaryGeo.coordinates[0];
+                }
             }
             let coords = rawCoords.map(c => [c[1], c[0]]);
             if (coords.length > 0 && coords[0][0] === coords[coords.length - 1][0] && coords[0][1] === coords[coords.length - 1][1]) {
@@ -311,9 +315,13 @@ export const useAdminJurisdictions = () => {
         if (boundaryGeo && boundaryGeo.coordinates) {
             let rawCoords = [];
             if (boundaryGeo.type === 'MultiPolygon') {
-                rawCoords = boundaryGeo.coordinates[0][0] || [];
+                if (boundaryGeo.coordinates[0] && boundaryGeo.coordinates[0][0]) {
+                    rawCoords = boundaryGeo.coordinates[0][0];
+                }
             } else if (boundaryGeo.type === 'Polygon') {
-                rawCoords = boundaryGeo.coordinates[0] || [];
+                if (boundaryGeo.coordinates[0]) {
+                    rawCoords = boundaryGeo.coordinates[0];
+                }
             }
             let coords = rawCoords.map(c => [c[1], c[0]]);
             
