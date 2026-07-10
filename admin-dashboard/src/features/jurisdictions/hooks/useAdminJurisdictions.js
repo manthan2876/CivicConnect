@@ -46,11 +46,7 @@ export const useAdminJurisdictions = () => {
         }
     }, []);
 
-    useEffect(() => {
-        if (!editingItem) {
-            setDrawnPoints([]);
-        }
-    }, [selectedUlb, selectedZone, activeTab, editingItem]);
+
 
     const fetchData = async () => {
         try {
