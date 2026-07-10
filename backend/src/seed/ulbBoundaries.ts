@@ -6,18 +6,57 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const ensureLngLat = (geometry: any) => {
+    if (!geometry) return geometry;
+    const processRing = (ring: any[]) => {
+        return ring.map(coord => {
+            // Surat is lat ~21, lng ~72. If coord[0] is around 21, it is latitude, so swap it to standard [lng, lat]
+            if (coord[0] < 50 && coord[0] > 10 && coord[1] > 60 && coord[1] < 90) {
+                return [coord[1], coord[0]];
+            }
+            return coord;
+        });
+    };
+
+    if (geometry.type === 'Polygon') {
+        return {
+            ...geometry,
+            coordinates: geometry.coordinates.map(processRing)
+        };
+    } else if (geometry.type === 'MultiPolygon') {
+        return {
+            ...geometry,
+            coordinates: geometry.coordinates.map((poly: any[]) => poly.map(processRing))
+        };
+    }
+    return geometry;
+};
+
 export const seedUlbBoundaries = async () => {
     try {
         console.log('--- Seeding Surat Municipal Corporation Data from GeoJSON ---');
 
-        // 1. Ensure a default Department exists
-        const [defaultDept] = await Department.findOrCreate({
-            where: { name: 'Public Works Department' },
-            defaults: {
-                id: '24ba1d92-f1be-4180-94c3-fe5f181afe51',
-                contact_email: 'pwd@civicconnect.gov'
-            }
-        });
+        // 1. Seed SMC departments that resolve civic issues
+        const smcDepts = [
+            { id: '24ba1d92-f1be-4180-94c3-fe5f181afe51', name: 'Road Development', contact_email: 'road.dev@suratmunicipal.org' },
+            { id: '8a39163d-019d-415a-b178-8ca16232c905', name: 'Drainage', contact_email: 'drainage@suratmunicipal.org' },
+            { id: '20a21024-5b5c-4ad0-84f2-710db1c7d693', name: 'Hydraulic', contact_email: 'hydraulic@suratmunicipal.org' },
+            { id: '282b4ac0-9e67-40e9-99d8-b569a0f8f6e0', name: 'Street Light', contact_email: 'streetlight@suratmunicipal.org' },
+            { id: '1a6f9e45-aca4-4a6c-800f-31fc7924b775', name: 'Solid Waste Management', contact_email: 'swm@suratmunicipal.org' },
+            { id: '3ab9163d-019d-415a-b178-8ca16232c906', name: 'Traffic Cell', contact_email: 'traffic@suratmunicipal.org' },
+            { id: '4ab9163d-019d-415a-b178-8ca16232c907', name: 'Bridge Cell', contact_email: 'bridge@suratmunicipal.org' },
+            { id: '5ab9163d-019d-415a-b178-8ca16232c908', name: 'BRTS Cell', contact_email: 'brts@suratmunicipal.org' },
+            { id: '6ab9163d-019d-415a-b178-8ca16232c909', name: 'Vector Borne Diseases Control', contact_email: 'vector.control@suratmunicipal.org' },
+            { id: '7ab9163d-019d-415a-b178-8ca16232c910', name: 'Fire & Emergency Services', contact_email: 'fire@suratmunicipal.org' },
+            { id: '8ab9163d-019d-415a-b178-8ca16232c911', name: 'Environment Cell', contact_email: 'env@suratmunicipal.org' },
+            { id: '9ab9163d-019d-415a-b178-8ca16232c912', name: 'Air Quality Management Cell', contact_email: 'air.quality@suratmunicipal.org' }
+        ];
+
+        for (const dept of smcDepts) {
+            await Department.upsert(dept);
+        }
+
+        const defaultDeptId = '24ba1d92-f1be-4180-94c3-fe5f181afe51'; // Road Development
 
         // 2. Seed SMC ULB
         const [smcUlb] = await UlbBoundary.findOrCreate({
@@ -107,17 +146,19 @@ export const seedUlbBoundaries = async () => {
             const targetZoneCode = getOfficialZoneCode(geoWardName, geoWardCode);
             const parentZone = zoneLookups[targetZoneCode];
 
+            const standardGeometry = ensureLngLat(geometry);
+
             // Dynamically assign geometry to Zone definition if it's currently unassigned
             if (!parentZone.boundary) {
-                await parentZone.update({ boundary: geometry });
+                await parentZone.update({ boundary: standardGeometry });
             }
 
             // Seed unique structural Ward instance linked to correct administrative zone
             await Ward.findOrCreate({
                 where: { name: `${parentZone.name} - ${geoWardName}` },
                 defaults: {
-                    boundary: geometry,
-                    dept_id: defaultDept.id,
+                    boundary: standardGeometry,
+                    dept_id: defaultDeptId,
                     ulb_id: smcUlb.id,
                     zone_id: parentZone.id
                 }
