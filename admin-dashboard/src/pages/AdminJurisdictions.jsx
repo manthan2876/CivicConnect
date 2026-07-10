@@ -145,6 +145,7 @@ const AdminJurisdictions = () => {
                     onMarkerDrag={handleMarkerDrag}
                     onMarkerDelete={handleMarkerDelete}
                     previewItem={previewItem}
+                    editingItem={editingItem}
                 />
             </div>
         </div>

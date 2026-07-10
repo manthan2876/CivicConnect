@@ -79,7 +79,8 @@ const JurisdictionMap = ({
     ulbs = [],
     onMarkerDrag,
     onMarkerDelete,
-    previewItem
+    previewItem,
+    editingItem
 }) => {
     // Extract selected zone positions to render dashed border
     const activeZone = zones.find(z => z.id === selectedZone);
@@ -91,24 +92,28 @@ const JurisdictionMap = ({
 
     const zonePositions = getZonePositions();
 
-    // Extract selected city (ULB) positions to render dashed border
-    const activeUlb = ulbs.find(u => u.id.toString() === selectedUlb?.toString());
-    const getUlbPositions = () => {
-        if (!activeUlb || !activeUlb.geom || !activeUlb.geom.coordinates) return null;
-        const geom = activeUlb.geom;
+    // Helper: extract lat/lng positions from a GeoJSON geom object
+    const extractPositionsFromGeom = (geom) => {
+        if (!geom || !geom.coordinates) return null;
         if (geom.type === 'MultiPolygon') {
-            if (!geom.coordinates[0] || !geom.coordinates[0][0]) return null;
-            const coords = geom.coordinates[0][0];
-            return coords.map((c) => [c[1], c[0]]);
+            if (!geom.coordinates[0] || !geom.coordinates[0][0] || geom.coordinates[0][0].length === 0) return null;
+            return geom.coordinates[0][0].map((c) => [c[1], c[0]]);
         } else if (geom.type === 'Polygon') {
-            if (!geom.coordinates[0]) return null;
-            const coords = geom.coordinates[0];
-            return coords.map((c) => [c[1], c[0]]);
+            if (!geom.coordinates[0] || geom.coordinates[0].length === 0) return null;
+            return geom.coordinates[0].map((c) => [c[1], c[0]]);
         }
         return null;
     };
 
-    const ulbPositions = getUlbPositions();
+    // Extract selected city (ULB) positions to render dashed border (used for zones/wards)
+    const activeUlb = ulbs.find(u => u.id.toString() === selectedUlb?.toString());
+    const ulbPositions = (activeTab !== 'ulbs') ? extractPositionsFromGeom(activeUlb?.geom) : null;
+
+    // When editing a ULB directly, show its existing saved boundary as a cyan guide
+    const editingUlb = (editingItem && editingItem.type === 'ulbs')
+        ? ulbs.find(u => u.id === editingItem.id)
+        : null;
+    const editingUlbPositions = extractPositionsFromGeom(editingUlb?.geom);
 
     return (
         <div className="lg:col-span-2 relative h-[650px] rounded-3xl overflow-hidden shadow-2xl border border-white/5 bg-gray-900/10">
@@ -148,7 +153,7 @@ const JurisdictionMap = ({
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 />
 
-                {/* Render Selected Parent City/ULB Boundary */}
+                {/* Render Selected Parent City/ULB Boundary (for zones/wards editing) */}
                 {ulbPositions && (
                     <Polygon
                         positions={ulbPositions}
@@ -161,6 +166,28 @@ const JurisdictionMap = ({
                             dashArray: '8, 8'
                         }}
                     />
+                )}
+
+                {/* Render existing ULB boundary when editing a city directly */}
+                {editingUlbPositions && (
+                    <>
+                        <Polygon
+                            positions={editingUlbPositions}
+                            interactive={false}
+                            pathOptions={{
+                                color: '#06B6D4', // Cyan
+                                fillColor: '#06B6D4',
+                                fillOpacity: 0.05,
+                                weight: 2.5,
+                                dashArray: '10, 6'
+                            }}
+                        >
+                            <Tooltip sticky direction="center" permanent={false}>
+                                <div className="text-[10px] font-bold px-1">Current saved boundary</div>
+                            </Tooltip>
+                        </Polygon>
+                        <UlbCentering ulbPositions={editingUlbPositions} />
+                    </>
                 )}
 
                 {/* Render Selected Parent Zone Boundary */}
