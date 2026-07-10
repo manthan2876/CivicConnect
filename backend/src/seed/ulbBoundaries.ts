@@ -137,10 +137,24 @@ export const seedUlbBoundaries = async () => {
 // =========================================================================
 // SELF-EXECUTION ENTRYPOINT FOR TERMINAL INVOCATION
 // =========================================================================
-seedUlbBoundaries().then(() => {
-    console.log('Seeding script process finished.');
-    process.exit(0);
-}).catch((err) => {
-    console.error('Fatal seeding script failure:', err);
-    process.exit(1);
-});
+const isMain = () => {
+    if (!process.argv[1]) return false;
+    try {
+        const scriptPath = fs.realpathSync(process.argv[1]);
+        const currentPath = fs.realpathSync(fileURLToPath(import.meta.url));
+        return scriptPath === currentPath;
+    } catch {
+        return false;
+    }
+};
+
+if (isMain()) {
+    seedUlbBoundaries().then(() => {
+        console.log('Seeding script process finished.');
+        process.exit(0);
+    }).catch((err) => {
+        console.error('Fatal seeding script failure:', err);
+        process.exit(1);
+    });
+}
+
