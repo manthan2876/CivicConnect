@@ -29,7 +29,9 @@ const JurisdictionForm = ({
     editingItem,
     onStartEdit,
     onCancelEdit,
-    onDelete
+    onDelete,
+    previewItem,
+    onTogglePreview
 }) => {
     return (
         <div className={`p-8 rounded-3xl shadow-xl flex flex-col justify-between ${darkMode ? 'bg-gray-800/40 border border-white/5' : 'bg-white shadow-gray-200/50'}`}>
