@@ -1,6 +1,6 @@
 torch
 torchvision
-pillow>=10.2.0
+pillow>=13.0.0
 numpy
 gradio
 spaces
