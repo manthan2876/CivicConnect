@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.99.3",
+    "@supabase/supabase-js": "^2.118.0",
     "clsx": "^2.1.1",
     "i18next": "^26.3.4",
     "leaflet": "^1.9.4",
