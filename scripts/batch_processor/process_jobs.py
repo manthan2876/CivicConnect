@@ -27,7 +27,9 @@ def get_env(key, default=None, required=False):
 SUPABASE_URL = get_env("SUPABASE_URL", required=True)
 SUPABASE_SERVICE_ROLE = get_env("SUPABASE_SERVICE_ROLE", required=True)
 BUCKET = get_env("SUPABASE_STORAGE_BUCKET", "civic-connect-data")
-HF_TOKEN = get_env("HF_TOKEN", required=True)
+HF_TOKEN = get_env("HF_TOKEN") or get_env("HF_SPACE_WRITE_TOKEN")
+if not HF_TOKEN:
+    raise Exception("CRITICAL: Missing required environment variable: HF_TOKEN (or HF_SPACE_WRITE_TOKEN)")
 HF_SPACE_ID = get_env("HF_SPACE_ID", "Maharsh8805/CivicConnect-Classifier")
 MAX_RETRIES = 3
 SPACE_ATTEMPTS = int(get_env("HF_SPACE_ATTEMPTS", "3"))
