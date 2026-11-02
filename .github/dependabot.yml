@@ -36,6 +36,9 @@ updates:
       classifier-dependencies:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "pillow"
+        versions: [">=13.0.0"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
