@@ -4,7 +4,7 @@ pillow>=12.3.0,<13.0.0
 numpy
 gradio
 spaces
-transformers>=5.21.0
+transformers>=5.22.1
 accelerate
 sentencepiece
 protobuf
