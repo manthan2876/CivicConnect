@@ -24,7 +24,7 @@
     "check": "npm run check:backend && npm run check:dashboard && npm run check:ai && npm run check:mobile"
   },
   "devDependencies": {
-    "concurrently": "^10.0.6",
-    "supabase": "^2.122.0"
+    "concurrently": "^10.0.7",
+    "supabase": "^3.1.0"
   }
 }
