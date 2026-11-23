@@ -1,6 +1,20 @@
 import { supabase } from '../config/supabase';
 
-const PRIMARY_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+function normalizeBaseUrl(rawUrl) {
+    if (!rawUrl) return 'http://localhost:5000/api';
+    let trimmed = rawUrl.trim().replace(/\/+$/, '');
+    if (!trimmed.endsWith('/api')) {
+        trimmed = `${trimmed}/api`;
+    }
+    return trimmed;
+}
+
+function resolveUrl(base, endpoint) {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${base}${cleanEndpoint}`;
+}
+
+const PRIMARY_API_URL = normalizeBaseUrl(import.meta.env.VITE_API_URL);
 const LOCAL_API_URL = 'http://localhost:5000/api';
 
 async function performFetch(url, options) {
@@ -52,7 +66,7 @@ export const api = {
             'Authorization': `Bearer ${session?.access_token}`
         };
 
-        const response = await performFetch(`${PRIMARY_API_URL}${endpoint}`, { headers });
+        const response = await performFetch(resolveUrl(PRIMARY_API_URL, endpoint), { headers });
         return handleResponse(response);
     },
 
@@ -66,7 +80,7 @@ export const api = {
             headers['Content-Type'] = 'application/json';
         }
 
-        const response = await performFetch(`${PRIMARY_API_URL}${endpoint}`, {
+        const response = await performFetch(resolveUrl(PRIMARY_API_URL, endpoint), {
             method: 'POST',
             headers,
             body: isFormData ? body : JSON.stringify(body)
@@ -81,7 +95,7 @@ export const api = {
             'Authorization': `Bearer ${session?.access_token}`
         };
 
-        const response = await performFetch(`${PRIMARY_API_URL}${endpoint}`, {
+        const response = await performFetch(resolveUrl(PRIMARY_API_URL, endpoint), {
             method: 'PATCH',
             headers,
             body: JSON.stringify(body)
@@ -96,7 +110,7 @@ export const api = {
             'Authorization': `Bearer ${session?.access_token}`
         };
 
-        const response = await performFetch(`${PRIMARY_API_URL}${endpoint}`, {
+        const response = await performFetch(resolveUrl(PRIMARY_API_URL, endpoint), {
             method: 'DELETE',
             headers
         });

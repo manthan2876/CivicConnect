@@ -38,16 +38,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.use('/api/reports', reportRoutes);
-app.use('/api/departments', departmentRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/audit-logs', auditRoutes);
-app.use('/api/uploads', uploadRoutes);
-app.use('/api/system', systemRoutes);
-app.use('/api/whatsapp', whatsappRoutes);
+// Mount routes under /api and also at root for resilient client URL compatibility
+const mountAllRoutes = (prefix: string) => {
+    app.use(`${prefix}/reports`, reportRoutes);
+    app.use(`${prefix}/departments`, departmentRoutes);
+    app.use(`${prefix}/notifications`, notificationRoutes);
+    app.use(`${prefix}/auth`, authRoutes);
+    app.use(`${prefix}/users`, userRoutes);
+    app.use(`${prefix}/analytics`, analyticsRoutes);
+    app.use(`${prefix}/audit-logs`, auditRoutes);
+    app.use(`${prefix}/uploads`, uploadRoutes);
+    app.use(`${prefix}/system`, systemRoutes);
+    app.use(`${prefix}/whatsapp`, whatsappRoutes);
+};
+
+mountAllRoutes('/api');
+mountAllRoutes('');
 
 
 app.get('/health', (req: Request, res: Response) => {

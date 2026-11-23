@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "com.civicconnect.civic_connect_mobile"
     compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
