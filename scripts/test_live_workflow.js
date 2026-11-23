@@ -142,7 +142,7 @@ async function testWorkflow() {
 
     // Step F: Test WhatsApp Automated Issue Intake and Triage
     console.log(`\n• Step F: Testing WhatsApp automated intake & triage bot...`);
-    const waRes = await fetch(`${BASE_URL}/api/whatsapp`, {
+    const waRes = await fetch(`${BASE_URL}/api/whatsapp/webhook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

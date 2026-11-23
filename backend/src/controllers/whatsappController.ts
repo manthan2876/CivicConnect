@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import crypto from 'crypto';
 import { User } from '../models/User.js';
 import { Issue } from '../models/Issue.js';
 import { Ward } from '../models/Ward.js';
@@ -16,6 +17,7 @@ export const handleWhatsAppWebhook = async (req: Request, res: Response) => {
         let user = await User.findOne({ where: { phone } });
         if (!user) {
             user = await User.create({
+                id: crypto.randomUUID(),
                 phone,
                 role: 'citizen'
             });
