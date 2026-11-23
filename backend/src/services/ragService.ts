@@ -5,24 +5,44 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Use Groq (via OpenAI-compatible client)
-const groq = new OpenAI({
-    apiKey: process.env.OPEN_SOURCE_LLM_KEY || '',
-    baseURL: process.env.OPEN_SOURCE_LLM_URL || 'https://api.groq.com/openai/v1'
-});
+let _groq: OpenAI | null = null;
+
+function getGroqClient(): OpenAI | null {
+    const apiKey = process.env.OPEN_SOURCE_LLM_KEY || process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+        return null;
+    }
+    if (!_groq) {
+        try {
+            _groq = new OpenAI({
+                apiKey: apiKey.trim(),
+                baseURL: process.env.OPEN_SOURCE_LLM_URL || 'https://api.groq.com/openai/v1'
+            });
+        } catch (err: any) {
+            console.warn('[RAG] Failed to initialize OpenAI/Groq client:', err.message);
+            _groq = null;
+        }
+    }
+    return _groq;
+}
 
 export class RAGService {
     /**
      * Uses Groq to extract optimized search keywords from a natural language query.
      */
     static async extractKeywords(query: string): Promise<string> {
+        const client = getGroqClient();
+        if (!client) {
+            return query.replace(/[^a-zA-Z0-9\s]/g, ' ').trim();
+        }
+
         try {
             const prompt = `
                 Extract 3-5 core search keywords from this civic query: "${query}"
                 Return only the keywords separated by spaces.
                 Example: "Why is there garbage in Ward 5?" -> "garbage waste ward_5"
             `;
-            const response = await groq.chat.completions.create({
+            const response = await client.chat.completions.create({
                 model: process.env.LLM_MODEL || 'llama-3.1-8b-instant',
                 messages: [{ role: 'user', content: prompt }],
                 max_tokens: 20
@@ -39,8 +59,34 @@ export class RAGService {
     static async semanticSearch(query: string, limit = 5): Promise<any[]> {
         try {
             const keywords = await this.extractKeywords(query);
-            // Format for Postgres tsquery: "word1 & word2 & word3"
-            const tsquery = keywords.split(' ').filter(w => w.length > 2).join(' & ');
+            // Format for Postgres tsquery: "word1 & word2 & word3", stripping special chars
+            const cleanWords = keywords
+                .replace(/[^a-zA-Z0-9\s]/g, ' ')
+                .split(/\s+/)
+                .filter(w => w.length > 2);
+
+            const tsquery = cleanWords.length > 0 ? cleanWords.join(' & ') : '';
+
+            if (!tsquery) {
+                // Fallback to ILIKE search if no valid tsquery tokens
+                const results = await sequelize.query(`
+                    SELECT 
+                        id, 
+                        category, 
+                        description, 
+                        status, 
+                        priority_score,
+                        0.5 as similarity
+                    FROM issues
+                    WHERE category ILIKE :likeQuery OR coalesce(description, '') ILIKE :likeQuery
+                    ORDER BY "createdAt" DESC
+                    LIMIT :limit
+                `, {
+                    replacements: { likeQuery: `%${query.slice(0, 50).trim()}%`, limit },
+                    type: QueryTypes.SELECT
+                });
+                return results;
+            }
 
             const results = await sequelize.query(`
                 SELECT 
@@ -49,13 +95,13 @@ export class RAGService {
                     description, 
                     status, 
                     priority_score,
-                    ts_rank_cd(to_tsvector('english', category || ' ' || description), to_tsquery('english', :tsquery)) as similarity
+                    ts_rank_cd(to_tsvector('english', category || ' ' || coalesce(description, '')), to_tsquery('english', :tsquery)) as similarity
                 FROM issues
-                WHERE to_tsvector('english', category || ' ' || description) @@ to_tsquery('english', :tsquery)
+                WHERE to_tsvector('english', category || ' ' || coalesce(description, '')) @@ to_tsquery('english', :tsquery)
                 ORDER BY similarity DESC
                 LIMIT :limit
             `, {
-                replacements: { tsquery: tsquery || query, limit },
+                replacements: { tsquery, limit },
                 type: QueryTypes.SELECT
             });
 
@@ -77,7 +123,15 @@ export class RAGService {
                 return "I couldn't find any relevant civic issues in the database using the keywords extracted from your query.";
             }
 
-            const contextStr = context.map(c => 
+            const client = getGroqClient();
+            if (!client) {
+                const summaryList = context.map((c: any) => 
+                    `• [Issue ${c.id.slice(0, 8)}] Category: ${c.category} | Status: ${c.status} | Priority: ${c.priority_score} | Description: ${c.description || 'N/A'}`
+                ).join('\n');
+                return `### Real-Time Incident Report\n\nFound **${context.length}** matching issues for "${query}":\n\n${summaryList}\n\n*(Note: Set OPEN_SOURCE_LLM_KEY in environment for generative AI analysis).*`;
+            }
+
+            const contextStr = context.map((c: any) => 
                 `- [Issue ${c.id.slice(0,8)}] Category: ${c.category}, Status: ${c.status}, Priority: ${c.priority_score}, Description: ${c.description}`
             ).join('\n');
 
@@ -94,7 +148,7 @@ Tasks:
 Below is the real-time context from the civic issues database:
 ${contextStr}`;
 
-            const response = await groq.chat.completions.create({
+            const response = await client.chat.completions.create({
                 model: process.env.LLM_MODEL || 'llama-3.1-8b-instant',
                 messages: [
                     { role: 'system', content: systemPrompt },

@@ -83,7 +83,7 @@ export const useIssueDetails = (id, onDeleted) => {
     const fetchRepairData = async () => {
         try {
             const logs = await reportsApi.getAudit(id);
-            const resolutionLog = logs.find(log => log.event_type === 'RESOLUTION_SUBMITTED');
+            const resolutionLog = logs.find(log => log.event_type === 'report.resolution_proposed' || log.event_type === 'RESOLUTION_SUBMITTED');
             if (resolutionLog) {
                 setRepairData(resolutionLog.payload);
             }

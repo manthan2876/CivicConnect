@@ -16,7 +16,9 @@ export const proposeResolution = async (req: AuthRequest, res: Response): Promis
         }
 
         const user = await User.findByPk(userAuth.id);
-        if (!user || (user.role !== 'staff' && user.role !== 'authority' && user.role !== 'admin' && user.role !== 'super_admin')) {
+        const userRole = (user?.role || '').toLowerCase();
+        const allowedRoles = ['staff', 'field_officer', 'authority', 'dept_head', 'admin', 'super_admin', 'hq_staff'];
+        if (!user || !allowedRoles.includes(userRole)) {
             return res.status(403).json({ error: 'Access denied. Only assigned staff or authorities can propose resolution.' });
         }
 
@@ -25,11 +27,11 @@ export const proposeResolution = async (req: AuthRequest, res: Response): Promis
         const issue = await Issue.findByPk(id as string);
         if (!issue) return res.status(404).json({ error: 'Issue not found' });
 
-        if (user.role === 'staff' && issue.assigned_staff_id !== user.id) {
+        if (['staff', 'field_officer'].includes(userRole) && issue.assigned_staff_id !== user.id) {
             return res.status(403).json({ error: 'Access denied. You are not assigned to this issue.' });
         }
 
-        if (user.role === 'authority' && user.department_id && issue.assigned_department_id !== user.department_id) {
+        if (['authority', 'dept_head'].includes(userRole) && user.department_id && issue.assigned_department_id !== user.department_id) {
             return res.status(403).json({ error: 'Access denied. You do not belong to the department assigned to this issue.' });
         }
 

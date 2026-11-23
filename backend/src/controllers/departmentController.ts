@@ -11,7 +11,7 @@ export const getDepartments = async (_req: Request, res: Response) => {
                             SELECT COUNT(*)
                             FROM users
                             WHERE users.department_id = "Department".id
-                            AND users.role = 'staff'
+                            AND users.role IN ('staff', 'field_officer')
                         )`),
                         'staff_count'
                     ]

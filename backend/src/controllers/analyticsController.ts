@@ -10,8 +10,10 @@ export const queryExecutiveAnalytics = async (req: AuthRequest, res: Response) =
         const { query } = req.body;
         const user = req.user;
 
-        // 1. Role Check: Only Authority or Admin
-        if (!user || !['authority', 'admin', 'super_admin'].includes(user.role)) {
+        // 1. Role & Permission Check: Executive view allowed for authority, dept_head, admin, super_admin, mayor, councilor
+        const allowedRoles = ['authority', 'dept_head', 'admin', 'super_admin', 'mayor', 'councilor'];
+        const hasPermission = user?.permissions?.includes('analytics:query');
+        if (!user || (!allowedRoles.includes(user.role?.toLowerCase()) && !hasPermission)) {
             return res.status(403).json({ error: 'Access denied. Privileged view only.' });
         }
 

@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import { User, Department, Ward, Role, UserRole } from '../../config/db.js';
 import { AuditService } from '../../services/auditService.js';
 import { supabaseAdmin } from '../../config/supabase.js';
+import { Op } from 'sequelize';
 import type { AuthRequest } from './user.utils.js';
 
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
@@ -21,7 +22,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 export const getStaff = async (req: AuthRequest, res: Response) => {
     try {
         const { ward_id, department_id } = req.query;
-        const where: any = { role: 'staff' };
+        const where: any = { role: { [Op.in]: ['staff', 'field_officer'] } };
 
         if (ward_id) where.ward_id = ward_id;
         if (department_id) where.department_id = department_id;

@@ -13,9 +13,9 @@ import { useAuth } from '../context/AuthContext';
  *     <DeleteButton />
  *   </RoleGuard>
  *
- * Usage (with fallback):
- *   <RoleGuard permission="report:delete" fallback={<span title="No permission">🔒</span>}>
- *     <DeleteButton />
+ * Usage (hybrid):
+ *   <RoleGuard roles={['super_admin', 'admin']} permission="audit:view">
+ *     <AuditTrail />
  *   </RoleGuard>
  *
  * Props:
@@ -29,17 +29,22 @@ const RoleGuard = ({ permission, roles, fallback = null, children }) => {
 
     if (!user) return fallback;
 
-    // Permission-based check
-    if (permission !== undefined) {
-        return can(permission) ? children : fallback;
+    // Check permission if specified
+    if (permission !== undefined && can(permission)) {
+        return children;
     }
 
-    // Role-based check
+    // Check roles if specified
     if (roles !== undefined) {
         const allowedRoles = Array.isArray(roles) ? roles : [roles];
         const userRole = (user.role || '').toLowerCase();
         const hasAccess = allowedRoles.some(r => r.toLowerCase() === userRole);
-        return hasAccess ? children : fallback;
+        if (hasAccess) return children;
+    }
+
+    // If guard conditions were provided and neither matched, return fallback
+    if (permission !== undefined || roles !== undefined) {
+        return fallback;
     }
 
     // No guard specified — render children

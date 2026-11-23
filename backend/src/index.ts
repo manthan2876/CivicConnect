@@ -19,6 +19,7 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
+import whatsappRoutes from './routes/whatsappRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 
 
@@ -29,6 +30,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 // Serve local uploads
@@ -45,6 +47,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/system', systemRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 
 app.get('/health', (req: Request, res: Response) => {

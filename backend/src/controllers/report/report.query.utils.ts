@@ -3,6 +3,7 @@ import { Ward, User } from '../../config/db.js';
 
 export const buildReportsWhereClause = async (user: any, query: any): Promise<any> => {
     const { ward_id, status, assigned_staff_id } = query;
+    const resolvedStaffId = assigned_staff_id === 'me' ? user?.id : assigned_staff_id;
     const whereClause: any = {};
     const userRole = (user?.role || 'citizen').toLowerCase();
     const permissions: string[] = user?.permissions || [];
@@ -15,17 +16,21 @@ export const buildReportsWhereClause = async (user: any, query: any): Promise<an
         if (ward_id && cityWardIds.includes(ward_id as string)) {
             whereClause.ward_id = ward_id;
         }
-        if (assigned_staff_id) whereClause.assigned_staff_id = assigned_staff_id;
+        if (resolvedStaffId) whereClause.assigned_staff_id = resolvedStaffId;
     } else if (permissions.includes('report:view_all')) {
         if (ward_id) whereClause.ward_id = ward_id;
-        if (assigned_staff_id) whereClause.assigned_staff_id = assigned_staff_id;
+        if (resolvedStaffId) whereClause.assigned_staff_id = resolvedStaffId;
         if (userRole === 'dept_head' || userRole === 'authority') {
             // dept_head sees all issues in their ward + department
             if (user?.ward_id) whereClause.ward_id = user.ward_id;
             if (user?.department_id) whereClause.assigned_department_id = user.department_id;
         } else if (userRole === 'field_officer') {
-            // field_officer (zone authority) sees all issues in their ward
-            if (user?.ward_id) whereClause.ward_id = user.ward_id;
+            // field_officer sees all issues in their ward (or only assigned if filtered)
+            if (resolvedStaffId) {
+                whereClause.assigned_staff_id = resolvedStaffId;
+            } else if (user?.ward_id) {
+                whereClause.ward_id = user.ward_id;
+            }
         } else if (userRole === 'staff') {
             // ground staff: only see their own assigned tasks
             whereClause.assigned_staff_id = user?.id;

@@ -15,8 +15,8 @@ export const useIssueList = (user) => {
     const [loading, setLoading] = useState(true);
     const [selectedIds, setSelectedIds] = useState([]);
 
-    const isAuthority = user?.role === 'authority';
-    const isStaff = user?.role === 'staff';
+    const isAuthority = user?.role === 'authority' || user?.role === 'dept_head';
+    const isStaff = user?.role === 'staff' || user?.role === 'field_officer';
 
     // Fetch initial issues
     useEffect(() => {

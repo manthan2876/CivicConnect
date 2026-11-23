@@ -21,7 +21,7 @@ const IssueWorkflowActions = ({
             <h2 className={`font-bold border-b pb-4 ${darkMode ? 'text-gray-200 border-white/5' : 'text-gray-800'}`}>Workflow Actions</h2>
             
             {/* Staff Specific Actions */}
-            {currentUser?.role === 'staff' && report.assigned_staff_id === currentUser.id && (
+            {(currentUser?.role === 'staff' || currentUser?.role === 'field_officer') && report.assigned_staff_id === currentUser.id && (
                 <div className="space-y-4">
                     {report.status === 'Pending' && (
                         <button
@@ -59,7 +59,7 @@ const IssueWorkflowActions = ({
             )}
 
             {/* Authority Specific Actions */}
-            {['authority', 'admin', 'super_admin'].includes(currentUser?.role) && (
+            {['authority', 'dept_head', 'admin', 'super_admin'].includes(currentUser?.role) && (
                 <div className="space-y-4">
                     {report.status === 'Pending Confirmation' ? (
                         <div className="space-y-3">
@@ -123,7 +123,7 @@ const IssueWorkflowActions = ({
             )}
 
             <p className={`text-[10px] italic text-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {currentUser?.role === 'staff' ? 'Authorized as Field Staff' : 'Authorized as Municipal Authority'}
+                {(currentUser?.role === 'staff' || currentUser?.role === 'field_officer') ? 'Authorized as Field Staff' : 'Authorized as Municipal Authority'}
             </p>
         </div>
     );

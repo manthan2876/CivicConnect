@@ -14,7 +14,7 @@ export const updateReport = async (req: AuthRequest, res: Response) => {
 
         const permissions: string[] = req.user?.permissions || [];
         const isAssigned = issue.assigned_staff_id === req.user?.id;
-        const isPrivilegedUser = ['admin', 'super_admin', 'hq_staff', 'dept_head'].includes(req.user?.role || '');
+        const isPrivilegedUser = ['admin', 'super_admin', 'hq_staff', 'dept_head', 'authority'].includes(req.user?.role || '');
 
         if (!isPrivilegedUser && !isAssigned) {
             return res.status(403).json({ error: 'Forbidden: You can only update issues assigned to you' });

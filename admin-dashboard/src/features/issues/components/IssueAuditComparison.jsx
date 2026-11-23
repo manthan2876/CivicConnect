@@ -39,7 +39,7 @@ const IssueAuditComparison = ({ report, repairData, darkMode }) => {
                     {(report.status === 'Pending Confirmation' || report.status === 'Resolved') ? (
                         <div className="relative group">
                             <img
-                                src={repairData?.repair_image || 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070&auto=format&fit=crop'}
+                                src={repairData?.repair_image || report.resolution_image_url || report.metadata?.resolution_image_url || 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070&auto=format&fit=crop'}
                                 alt="After"
                                 className="w-full aspect-video object-cover rounded-r-xl"
                             />

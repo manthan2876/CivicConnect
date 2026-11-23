@@ -1,8 +1,8 @@
 import type { Response } from 'express';
-import { AIFeedback, AuditLog } from '../../config/db.js';
+import { AIFeedback } from '../../config/db.js';
 import { RAGService } from '../../services/ragService.js';
+import { AuditService } from '../../services/auditService.js';
 import type { AuthRequest } from './report.utils.js';
-import { v4 as uuidv4 } from 'uuid';
 
 export const askCivicAI = async (req: AuthRequest, res: Response): Promise<any> => {
     try {
@@ -48,12 +48,12 @@ export const updateFeedbackStatus = async (req: AuthRequest, res: Response): Pro
         await feedback.update({ status: status || 'Processed' });
         
         // Log the administrative action
-        await AuditLog.create({
-            id: uuidv4(),
-            issue_id: feedback.issue_id,
-            action: `AI_FEEDBACK_${(status || 'PROCESSED').toUpperCase()}`,
-            actor_id: req.user?.id,
-            details: { feedback_id: id, new_status: status }
+        AuditService.log({
+            actor_id: req.user?.id || 'SYSTEM',
+            event_type: `ai.feedback_${(status || 'processed').toLowerCase()}`,
+            target_resource: 'ai_feedback',
+            target_resource_id: id as string,
+            payload: { issue_id: feedback.issue_id, feedback_id: id, new_status: status }
         });
 
         res.json({ message: `Feedback status updated to ${status}` });

@@ -62,7 +62,7 @@ export class TriageService {
 
             // 1. Find all eligible staff in the department (optionally filtered by ward)
             const staffFilter: any = {
-                role: 'staff',
+                role: { [Op.in]: ['staff', 'field_officer'] },
                 department_id: deptId,
                 is_active: true
             };

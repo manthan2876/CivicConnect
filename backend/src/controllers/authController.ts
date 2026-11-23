@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { User } from '../config/db.js';
 import { supabase, supabaseAdmin } from '../config/supabase.js';
+import { Op } from 'sequelize';
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -17,7 +18,6 @@ export const login = async (req: Request, res: Response) => {
 
         // Fetch/Sync profile in PostgreSQL
         const identifier = data.user.phone || data.user.email;
-        const { Op } = require('sequelize');
         let user = await User.findOne({ 
             where: { 
                 [Op.or]: [

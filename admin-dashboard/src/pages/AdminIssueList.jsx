@@ -36,7 +36,7 @@ const AdminIssueList = () => {
     } = useIssueList(user);
 
     const isSuperAdmin = user?.role === 'super_admin';
-    const isAuthority = user?.role === 'authority';
+    const isAuthority = user?.role === 'authority' || user?.role === 'dept_head';
 
     const handleExport = () => {
         const headers = ["ID", "Title", "Category", "Status", "Date", "Description"];

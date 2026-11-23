@@ -154,7 +154,7 @@ const AuditLogViewer = () => {
     useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
     return (
-        <RoleGuard roles={['super_admin', 'admin']} fallback={
+        <RoleGuard roles={['super_admin', 'admin', 'mayor']} permission="audit:view" fallback={
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                     <Shield className="w-12 h-12 text-slate-600 mx-auto mb-3" />
