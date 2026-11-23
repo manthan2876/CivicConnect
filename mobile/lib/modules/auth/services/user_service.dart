@@ -25,8 +25,8 @@ class UserService {
       await _client.auth.updateUser(
         UserAttributes(
           data: {
-            if (displayName != null) 'full_name': displayName,
-            if (photoURL != null) 'avatar_url': photoURL,
+            'full_name': ?displayName,
+            'avatar_url': ?photoURL,
           },
         ),
       );
@@ -35,8 +35,8 @@ class UserService {
     // 2. Update Public DB Profile via Backend API
     try {
       final body = <String, dynamic>{
-        if (homeLocation != null) 'home_location': homeLocation,
-        if (alertRadius != null) 'alert_radius_meters': alertRadius,
+        'home_location': ?homeLocation,
+        'alert_radius_meters': ?alertRadius,
       };
 
 

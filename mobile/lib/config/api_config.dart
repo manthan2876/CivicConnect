@@ -19,8 +19,13 @@ class ApiConfig {
 
 
   static Map<String, String> getHeaders({bool includeContentType = true}) {
-    final session = Supabase.instance.client.auth.currentSession;
-    final token = session?.accessToken;
+    String? token;
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      token = session?.accessToken;
+    } catch (_) {
+      // Supabase uninitialized or offline
+    }
     
     return {
       if (includeContentType) 'Content-Type': 'application/json',
