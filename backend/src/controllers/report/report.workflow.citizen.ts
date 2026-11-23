@@ -13,8 +13,11 @@ export const citizenConfirmResolution = async (req: AuthRequest, res: Response):
         const issue = await Issue.findByPk(id as string);
         if (!issue) return res.status(404).json({ error: 'Issue not found' });
 
-        const reporterIds = issue.reporter_ids || [issue.reporter_id];
-        if (!userAuth || !reporterIds.includes(userAuth.id)) {
+        const isReporter = userAuth && (
+            issue.reporter_id === userAuth.id ||
+            (Array.isArray(issue.reporter_ids) && issue.reporter_ids.includes(userAuth.id))
+        );
+        if (!isReporter) {
             return res.status(403).json({ error: 'Access denied. Only the original reporter can verify the resolution.' });
         }
 
@@ -34,6 +37,10 @@ export const citizenConfirmResolution = async (req: AuthRequest, res: Response):
         const baseCredits = GamificationService.calculateCredits(issue.priority_score, !!issue.s3_pre_key, !!issue.s3_audio_key);
         const bonusCredits = 20;
         const totalAwarded = baseCredits + bonusCredits;
+
+        const reporterIds = (issue.reporter_ids && issue.reporter_ids.length > 0)
+            ? issue.reporter_ids
+            : (issue.reporter_id ? [issue.reporter_id] : []);
 
         for (const rId of reporterIds) {
             await GamificationService.addCredits(rId as string, totalAwarded, 'RESOLVED_AND_VERIFIED');
@@ -78,8 +85,11 @@ export const citizenDisputeResolution = async (req: AuthRequest, res: Response):
         const issue = await Issue.findByPk(id as string);
         if (!issue) return res.status(404).json({ error: 'Issue not found' });
 
-        const reporterIds = issue.reporter_ids || [issue.reporter_id];
-        if (!userAuth || !reporterIds.includes(userAuth.id)) {
+        const isReporter = userAuth && (
+            issue.reporter_id === userAuth.id ||
+            (Array.isArray(issue.reporter_ids) && issue.reporter_ids.includes(userAuth.id))
+        );
+        if (!isReporter) {
             return res.status(403).json({ error: 'Access denied.' });
         }
 

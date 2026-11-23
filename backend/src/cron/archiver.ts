@@ -1,7 +1,7 @@
 import { Issue, sequelize } from '../config/db.js';
 import { Op } from 'sequelize';
 import { StorageService } from '../services/storageService.js';
-import { AuditLog } from '../models/AuditLog.js';
+import { AuditService } from '../services/auditService.js';
 
 const ARCHIVE_THRESHOLD_MONTHS = 6;
 
@@ -43,10 +43,12 @@ export const runArchivalProcess = async () => {
                 
                 await issue.save();
 
-                await AuditLog.create({
+                AuditService.log({
                     actor_id: 'SYSTEM_ARCHIVER',
                     event_type: 'ISSUE_ANONYMIZED',
-                    payload: { issue_id: issue.id, archived_at: new Date().toISOString() }
+                    target_resource: 'issue',
+                    target_resource_id: issue.id,
+                    new_value: { archived_at: new Date().toISOString() }
                 });
 
             } catch (err) {

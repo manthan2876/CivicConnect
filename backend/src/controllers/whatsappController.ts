@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import { User } from '../models/User.js';
 import { Issue } from '../models/Issue.js';
+import { Ward } from '../models/Ward.js';
+import { findWardId } from '../utils/spatialUtils.js';
 import { AIService, isSafeExternalUrl } from '../services/aiService.js';
 import { TriageService } from '../services/triageService.js';
 import { PriorityService } from '../services/priorityService.js';
@@ -37,7 +39,20 @@ export const handleWhatsAppWebhook = async (req: Request, res: Response) => {
         );
 
         // 4. Triage & Priority
-        const ward_id = 'DEFAULT_WARD'; // In a real app, we'd reverse geocode Lat/Lon
+        let ward_id: string | null = null;
+        if (Longitude && Latitude) {
+            ward_id = await findWardId(parseFloat(Longitude), parseFloat(Latitude));
+        }
+        if (!ward_id) {
+            const defaultWard = await Ward.findOne();
+            ward_id = defaultWard ? defaultWard.id : null;
+        }
+
+        if (!ward_id) {
+            res.type('text/xml');
+            return res.status(400).send('<Response><Message>Service area not found.</Message></Response>');
+        }
+
         const assignedDeptId = await TriageService.getDepartmentIdForCategory(aiResult.finalCategory);
         const assignedStaffId = await TriageService.findBestStaff(assignedDeptId, ward_id);
 

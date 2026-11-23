@@ -33,7 +33,9 @@ export const confirmResolution = async (req: AuthRequest, res: Response): Promis
             new_value: { status: 'Pending Citizen Confirmation' },
         });
 
-        const reporterIds = issue.reporter_ids || [issue.reporter_id];
+        const reporterIds = (issue.reporter_ids && issue.reporter_ids.length > 0)
+            ? issue.reporter_ids
+            : (issue.reporter_id ? [issue.reporter_id] : []);
         for (const rId of reporterIds) {
             sendNotificationToUser(
                 rId as string,

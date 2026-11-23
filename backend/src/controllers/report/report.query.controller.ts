@@ -111,7 +111,7 @@ export const getReportById = async (req: AuthRequest, res: Response) => {
                 // Always allow a reporter to view their own issue
             } else if (permissions.includes('report:view_area') && issue.ward_id !== req.user?.ward_id) {
                 return res.status(403).json({ error: 'Forbidden: Issue is outside your assigned ward' });
-            } else if (permissions.includes('report:view_my') && !isReporter) {
+            } else if (permissions.includes('report:view_my') && !canViewAsReporter) {
                 return res.status(403).json({ error: 'Forbidden: You can only access your own reported issues' });
             } else if (!permissions.includes('report:view_area') && !permissions.includes('report:view_my')) {
                 return res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
